@@ -1,0 +1,42 @@
+
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /
+
+Options -Indexes
+
+ServerSignature Off
+
+#Add trailing slash to folders
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} !\..+$
+RewriteCond %{REQUEST_URI} !/$
+RewriteRule (.*) http://%{HTTP_HOST}/$1/ [L,R=301]
+
+#Disable php execution inside images folder
+#Uncomment this if you want to use it. Put here or in your VirtualHost file
+#<Directory "/path/to/your/app/uploads">
+#   # Ignore .htaccess files
+#   AllowOverride None
+#
+#   # Serve HTML as plaintext, don't execute SHTML
+#   AddType text/plain .html .htm .shtml .php
+#
+#   # Don't run arbitrary PHP code.
+#   php_admin_flag engine off
+#
+#   # If you've other scripting languages, disable them too.
+#</Directory>
+
+RewriteRule ^[a-z]{2}/$ index.php?lang=$1 [NC,L]
+
+#Redirect php files, and do other parse ( not L clause )
+RewriteRule ^[a-z]{2}/(.*\.php)$ $1/$2/ [NC]
+
+#Redirect all es/name folders to php files counterpart, es/name -> /name.php?lang=es
+RewriteRule ^[a-z]{2}/(.*)/(.*)$ $2.php$3 [NC,L]
+
+#Redirect not matched like a folder, and do other parse ( not L clause )
+RewriteRule ^[a-z]{2}/(.*)$ $1/$2/
+
+</IfModule>
