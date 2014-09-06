@@ -1,3 +1,8 @@
 /nbproject
 /cache
 /uploads
+/generatedSQL
+/sampleapp/uploads
+/sampleapp/cache
+/tau/inc/config.php
+/tau/inc/settings.php
