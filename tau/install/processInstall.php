@@ -19,29 +19,7 @@ require_once( __ROOT__ . "/../tau/install/TauInstall.php");
 require_once( __ROOT__ . "/../tau/inc/InputValidator.php");
 require_once( __ROOT__ . "/../tau/inc/LogFile.php");
 ?>
-<style>
-    body{
-        color: rgb(90, 90, 90);
-        display: inline;
-        font-family: monospace, serif;
-        font-size: 14px;
-        height: auto;
-        line-height: 22.399999618530273px;
-        white-space: pre-wrap;
-        width: auto;
-    }
-
-    .success{
-        color:#0a0;
-    }
-    .red{
-        color:#f00;
-    }
-    .main{
-        margin:15px;
-        margin-left: 25px;
-    }
-</style>
+<link rel="stylesheet" type="text/css" href="install.css">
 <div class="main">
 <?php
 

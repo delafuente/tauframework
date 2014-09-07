@@ -20,7 +20,7 @@ require_once('config.php');
 require_once('recaptcha/recaptchalib.php');
 require_once('DataManager.php');
 require_once('LanguageLoader.php');
-require_once('../Tau.php');
+require_once('../../Tau.php');
 
 class InputValidator {
 

@@ -19,6 +19,11 @@ require_once( __ROOT__ . "/../tau/install/TauInstall.php");
 
 $db = DataManager::getInstance();
 
+if(APPLICATION_ENVIRONMENT != 'local'){
+    echo '<p>Cannot access this file</p>';
+    die();
+}
+
 echo "<h4>Deleting and recreating database test</h4>";
 
 echo "<p>drop database result: " . $db->makeQuery("drop database test;") . "</p>";

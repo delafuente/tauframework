@@ -11,19 +11,41 @@
  * @license https://github.com/delafuente/tauframework/blob/master/LICENSE The MIT License (MIT)
  */
 
-define('__ROOT__', dirname(dirname(__FILE__)) );
+//define('__ROOT__', dirname(dirname(__FILE__)) );
 
-require_once( __ROOT__ . "/tau/Tau.php" );
-require_once( __ROOT__ . "/tau/inc/config.php" );
+?>
+<head>
+    <link rel="stylesheet" type="text/css" href="tau/install/install.css">
+</head>
+<body><div class="main">
+<?php
 
-$tau = new Tau();
+require_once( "/tau/Tau.php" );
+require_once( "/tau/inc/config.php" );
+
+if(APPLICATION_ENVIRONMENT != 'local'){
+    echo '<p>Cannot access this file</p>';
+    die();
+}
+
+$tau = Tau::getInstance();
 
 echo "<h3>Tau Framework working: </h3><br/>";
 
-echo "<p>Current environment: " . $tau->getEnvironment() . "</p>";
+echo "<p>Current environment: <span class='lightgreen'>" . $tau->getEnvironment() . "</span></p>";
 
 $all_constants = get_defined_constants(true);
 
-print_r($all_constants);
+echo "<p>All user defined constants: </p>";
+
+
+    $tf = "<span class='tf'>";
+    $tfe = "</span>";
+
+foreach($all_constants['user'] as $key => $val){    
+    if($val === false){ $val = $tf."false".$tfe; }elseif($val === true){ $val = $tf."true".$tfe; }
+    echo "<span class='constant'>$key </span> =&gt; $val <br/>";
+}
 
 ?>
+</div></body>
