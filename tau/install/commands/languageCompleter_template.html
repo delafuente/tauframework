@@ -11,7 +11,7 @@
     
     <p>Editing translations for file {{replace_full_filename}}</p>
     <hr>
-    <form name="frmLangCompleter" action="javascript:languageCompleter.sendForm(this);">
+    <form id="frmLangCompleter" name="frmLangCompleter" action="javascript:languageCompleter.sendForm(this);">
         
     {{replace_content}}
     
@@ -22,6 +22,15 @@
     
     <input  type="submit" name="btnSubmit" value="Execute" /> 
     </form>
+   
+    <p>Notifications: <span id="notifications"></span></p>
+    <p>Received SQL statements:</p>
+    <div id="received_sql">
+        
+    </div>
+    
+   
+    
 </div>
         <hr>
         {{replace_footer}}

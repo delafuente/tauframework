@@ -67,7 +67,7 @@ $myMatches .= "<p>Searching for group <span id='t_group' class='success'>$group<
 $currentTranslations = $db->getResults("select * from tau_translations where t_group='" . $group . "';");
 
 foreach($currentTranslations as $key => $trans){
-    $myMatches .= "<p class='success'> found register for " . $trans['lang'] . " item:" . $trans['item'] . " translation:" . $trans['content'] . "</p>";
+    //$myMatches .= "<p class='success'> found register for " . $trans['lang'] . " item:" . $trans['item'] . " translation:" . $trans['content'] . "</p>";
     $tokensFound[$trans['lang']][$trans['item']] = $trans['content'];
 }
 
@@ -87,7 +87,8 @@ foreach($matches as $match){
             if($currentContent){
                $class = " notNewField"; 
             }
-            $formTable .= "<td><textarea cols='25' rows='2' id='$group" . "_$text_id" ."_$lang' class='inputs$class' name='" . $tokens[$coincidence] . "' >".htmlentities($currentContent)."</textarea></td>";
+            $identifier = $tokens[$coincidence] . "-$text_id-$lang";
+            $formTable .= "<td><textarea cols='25' rows='2' id='$identifier' class='inputs$class' name='$identifier' >".$currentContent."</textarea></td>";
             
         }
         //$myMatches .= "<p>match: $coincidence will translate to <span class='success'>{{" . $tokens[$coincidence]  ."}}</span> and  {$tokens[$coincidence]} in database</p>";
