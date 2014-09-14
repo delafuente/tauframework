@@ -49,7 +49,7 @@ $tokens = array();
 $tokensFound = array();
 $allowedLangs = explode(",",ALLOWED_LANGS);
 $totLangs = count($allowedLangs);
-$group = tau_get_group($file);
+$group = Tau::tau_get_group($file);
 $myMatches = "";
 $formTable = "<table><thead><tr><th></th>";
 
@@ -111,17 +111,5 @@ $template = str_replace("{{replace_footer}}", "Powered by " . Tau::getTauFramewo
 $template = str_replace("{{replace_content}}", $myMatches, $template);
 
 echo $template;
-
-
-
-function tau_get_group($full_file_path){
-    
-    $ff = $full_file_path;
-    
-    
-    $sha1 = substr(sha1($ff), 0, 7);
-    return "tau_" . $sha1;
-    
-}
 
 ?>
