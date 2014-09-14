@@ -1,5 +1,5 @@
 <?php
-
+session_start();
 /**
  * 
  * @abstract tau
@@ -10,6 +10,7 @@
  * @copyright (c) Lucas de la Fuente <lucasdelafuente1978@gmail.com>
  * @license https://github.com/delafuente/tauframework/blob/master/LICENSE The MIT License (MIT)
  */
+
 define('__ROOT__', str_replace("\\","/",dirname(dirname(__FILE__))) );
 
 require_once( __ROOT__ . "/../../tau/inc/config.php");
@@ -70,14 +71,14 @@ foreach($currentTranslations as $key => $trans){
     //$myMatches .= "<p class='success'> found register for " . $trans['lang'] . " item:" . $trans['item'] . " translation:" . $trans['content'] . "</p>";
     $tokensFound[$trans['lang']][$trans['item']] = $trans['content'];
 }
-
+$_SESSION['tokensFound'] = $tokensFound;
 
 foreach($matches as $match){
    // echo "<p>Reading match $match<br/>";
     foreach($match as $coincidence){
         
         $formTable .= "<tr>";
-        $tokens[$coincidence] = tau_tokenizer($file, $coincidence);
+        $tokens[$coincidence] = Tau::tau_tokenizer($file, $coincidence);
         $formTable .= "<td>" . $tokens[$coincidence] . "</td>";
         $text_id = 0;
         foreach($allowedLangs as $lang){
@@ -111,20 +112,7 @@ $template = str_replace("{{replace_content}}", $myMatches, $template);
 
 echo $template;
 
-function tau_tokenizer($full_file_path, $token){
-    
-    $ff = $full_file_path;
-    $token = substr($token, 2, strlen($token) - 4);
-    
-    $sha1 = substr(sha1($ff), 0, 7);
-    $tau_prefix = "tau_" . $sha1 . "_";
-    
-    if(substr($token,0,12) == $tau_prefix){
-        return $token;
-    }
-    
-    return "tau_" . $sha1 . "_" . $token;
-}
+
 
 function tau_get_group($full_file_path){
     

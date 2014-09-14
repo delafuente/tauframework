@@ -1,7 +1,6 @@
 
 var languageCompleter = (function($, undefined){
-    var myVar1 = '',
-    myVar2 = '';
+
  
     var sendForm = function(theForm){
     
@@ -24,7 +23,6 @@ var languageCompleter = (function($, undefined){
                 resto += $(this).attr("id") + " :" + $(this).val() + ":\n";
             }
         });
-        //alert("Empty? : " + new Date().getTime() + "\n" + resto);
         //Checks
         if($("#replace_in_local").is(":checked")){ 
             formData[formData.length] = { name: "replace_in_local", isNew : true, content: "on"  };  
@@ -35,8 +33,9 @@ var languageCompleter = (function($, undefined){
         if($("#execute_sql").is(":checked")){ 
             formData[formData.length] = { name: "execute_sql", isNew : true, content: "on"  };  
         }
+        var filepath = $("input#filepath").val();
+        formData[formData.length] = { name: "filepath", isNew : true, content: filepath }; 
     
-        //var dataString = jQuery("#frmLangCompleter").serialize();
         var dataString = JSON.stringify(formData);
         $("#notifications").html("");
         $("#received_sql").html("");
@@ -52,8 +51,14 @@ var languageCompleter = (function($, undefined){
                
                if(jsonData.execute_sql[0] == "success"){
                    $("#notifications").append("<p class='success'>" + jsonData.execute_sql[1] + "</p>");
-               }else{
-                   $("#notifications").append("<p class='error'>" + jsonData.execute_sql[1] + "</p>");
+               }else if(jsonData.execute_sql[0] == "error"){
+                   $("#notifications").append("<p class='error'>: " + jsonData.execute_sql[1] + "</p>");
+               }
+               
+               if(jsonData.replace_in_local[0] == "success"){
+                   $("#notifications").append("<p class='success'>Saved in file " + filepath + "</p><textarea style='width:80%;' rows='10'>" + jsonData.replace_in_local[1] + "</textarea>");
+               }else if(jsonData.replace_in_local[0] == "error"){
+                   $("#notifications").append("<p class='error'>" + jsonData.replace_in_local[1] + "</p>");
                }
                
                if(jsonData.create_sql){
@@ -62,27 +67,18 @@ var languageCompleter = (function($, undefined){
                        $("#received_sql").append("<p class='constant'>" + sql[theQuery] + "</p>");
                    }
                }
-               
+               $('input[name=btnSubmit]').hide();
             },
             failure: function(errMsg) {
                console.error("error:",errMsg);
+               $('input[name=btnSubmit]').hide();
             }
         }
         );
-    
-        //alert("returned " + $("#t_group").html() + " nonEmpty: " + inputList);
+
     };
  
     return {
-        getMyVar1: function() {
-            return myVar1;
-        }, //myVar1 public getter
-        setMyVar1: function(val) {
-            myVar1 = val;
-        }, //myVar1 public setter
         sendForm: sendForm
     }
 })(jQuery);
-
-
-//languageCompleter.sendForm("Hello World from languageCompleter module !!");

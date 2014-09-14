@@ -89,6 +89,21 @@ class Tau {
     public static function getTauFrameworkGreek(){
         return "&tau;&alpha;&upsilon; &phi;&rho;&alpha;&mu;&epsilon;&#989;o&rho;&kappa;";
     }
+    
+    public static function tau_tokenizer($full_file_path, $token){
+    
+        $ff = $full_file_path;
+        $token = substr($token, 2, strlen($token) - 4);
+
+        $sha1 = substr(sha1($ff), 0, 7);
+        $tau_prefix = "tau_" . $sha1 . "_";
+
+        if(substr($token,0,12) == $tau_prefix){
+            return $token;
+        }
+
+        return "tau_" . $sha1 . "_" . $token;
+    }
 
 }
 

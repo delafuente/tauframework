@@ -1,5 +1,6 @@
 <?php
 
+session_start();
 /**
  * 
  * @abstract tau
@@ -29,10 +30,12 @@ $db = DataManager::getInstance();
 $checks = array(
     "replace_in_local",
     "create_sql",
-    "execute_sql");
+    "execute_sql",
+    "filepath");
 $replace_in_local = false;
 $create_sql = false;
 $execute_sql = false;
+$full_filename = false;
 
 $inputs = json_decode($_POST['frmData'], true);
 $mainData = array();
@@ -54,6 +57,8 @@ foreach ($inputs as $input) {
                 break;
             case "execute_sql": $execute_sql = true;
                 break;
+            case "filepath": $full_filename = $input['content'];
+                break;
         }
     } else {
 
@@ -64,12 +69,18 @@ foreach ($inputs as $input) {
         $group = substr($name, 0, 11);
         $isNew = $input['isNew'];
         $content = $input['content'];
-        if ($isNew) {
-            $someInputIsNew = true;
-            $createSQL .= "('$lang','$group','$name','" . addslashes($content) . "'),\n";
-        } else {
-            $updateSQL[] = str_replace($repUpdate, array(addslashes($content), $lang, $group, $name), $updateSqlTemplate);
+        
+        //Check only new or changed content is updated
+        if ($_SESSION['tokensFound'][$lang][$name] != $content) {
+            if ($isNew) {
+                $someInputIsNew = true;
+                $createSQL .= "('$lang','$group','$name','" . addslashes($content) . "'),\n";
+            } else {
+                $updateSQL[] = str_replace($repUpdate, array(addslashes($content), $lang, $group, $name), $updateSqlTemplate);
+            }
         }
+
+
 
         //file_put_contents("output.txt", "++ name:$name num:$num lang:$lang group:$group isNew:$isNew content:$content" . "\n", FILE_APPEND);
     }
@@ -88,7 +99,7 @@ if ($someInputIsNew) {
 }
 
 if ($execute_sql) {
-    
+
     $result = $db->makeTransaction($mainSQLArray);
 
     if ($result) {
@@ -96,16 +107,49 @@ if ($execute_sql) {
     } else {
         $operations['execute_sql'] = array("error", $db->getLastErrorMessage());
     }
-}else{
+} else {
     $operations['execute_sql'] = array("not_required");
 }
 
 if ($create_sql) {
     $operations['create_sql'] = array("success", $mainSQLArray);
-}else{
+} else {
     $operations['create_sql'] = array("not_required");
 }
 
+if ($replace_in_local) {
+
+    if ($full_filename && file_exists($full_filename)) {
+
+        //Find and replace all tokens in file template
+        $file_contents = file_get_contents($full_filename);
+        $originalSha1 = sha1($file_contents);
+
+        //Found tokens
+        preg_match_all("/\{\{[^\}]*\}\}/", $file_contents, $matches);
+        $tokens = array();
+        $tokensFound = array();
+        foreach ($matches as $match) {
+
+            foreach ($match as $coincidence) {
+                $file_contents = str_replace($coincidence, "{{" . Tau::tau_tokenizer($full_filename, $coincidence) . "}}", $file_contents);
+            }
+        }
+
+        $endSha1 = sha1($file_contents);
+
+        if ($endSha1 != $originalSha1) {
+            file_put_contents($full_filename, $file_contents);
+            $operations['replace_in_local'] = array("success", $file_contents);
+        } else {
+            $operations['replace_in_local'] = array("success", "The file was not modified, because all language constants were already in tau format");
+        }
+    } else {
+        $operations['replace_in_local'] = array("error", "Not filename received or file '$full_filename' does not exist");
+    }
+} else {
+    $operations['replace_in_local'] = array("not_required");
+}
+
 echo json_encode($operations);
-//echo $_POST['frmData'];
 ?>
