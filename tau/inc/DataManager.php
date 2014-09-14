@@ -11,7 +11,7 @@
  */
 require_once( APPLICATION_PATH. "/tau/inc/db/shared/ez_sql_core.php");
 require_once( APPLICATION_PATH. "/tau/inc/db/mysql/ez_sql_mysql.php");
-
+require_once( APPLICATION_PATH. "/tau/Tau.php");
 
 class DataManager {
 
@@ -35,7 +35,7 @@ class DataManager {
         if(!$db_host){ $this->db_host = DB_HOST; }
         if(!$db_pass){ $this->db_pass = DB_ADMIN_PASSWD; }
         if(!$db_user){ $this->db_user = DB_ADMIN; }
-        
+                
         $this->db = new ezSQL_mysql($this->db_user, $this->db_pass, $this->db_name, $this->db_host);
         $this->lastErrorMessage = "NO ERROR";
         $this->lastErrorTrace = "NO TRACE";
@@ -67,9 +67,12 @@ class DataManager {
         
         if(self::$uniqueInstance === null || $db_name !== false){
             if($db_name !== false){
-                return new DataManager($db_name, $db_host, $db_pass, $db_user);
+                $instance = new DataManager($db_name, $db_host, $db_pass, $db_user);
+                Tau::addDbInstance($instance);
+                return $instance;
             }
             self::$uniqueInstance = new DataManager();
+            Tau::addDbInstance(self::$uniqueInstance);
         }
         
         return self::$uniqueInstance;
@@ -218,6 +221,7 @@ class DataManager {
         return $this->lastErrorTrace;
     }
     public function close(){
+        //echo "<p>DataManager close() for database " . $this->getDataBaseName() . "</p>";
         $this->db->disconnect();
     }
     /**

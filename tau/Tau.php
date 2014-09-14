@@ -14,6 +14,7 @@ class Tau {
 
     protected $environment;
     protected $lang;
+    private static $allDbInstances;
     private static $uniqueInstance = null;
 
     protected function __construct() {
@@ -75,7 +76,9 @@ class Tau {
     public function hookBeforeRender() {
         
     }
-
+    public function hookAfterRender() {
+        Tau::closeAllDbConnections();
+    }
     public function hookBeforeInit() {
         
     }
@@ -98,6 +101,25 @@ class Tau {
 
     public static function getTauFrameworkGreek() {
         return "&tau;&alpha;&upsilon; &phi;&rho;&alpha;&mu;&epsilon;&#989;o&rho;&kappa;";
+    }
+
+    public static function addDbInstance($instance) {
+        self::$allDbInstances[] = $instance;
+    }
+
+    public static function closeAllDbConnections() {
+
+        foreach (self::$allDbInstances as $db_instance) {
+
+            if ($db_instance instanceof DataManager) {
+
+                try {
+                    $db_instance->close();
+                } catch (Exception $ex) {
+                    return $ex->getMessage();
+                }
+            }
+        }
     }
 
     public static function tau_tokenizer($full_file_path, $token) {

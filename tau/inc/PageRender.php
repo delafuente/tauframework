@@ -11,7 +11,7 @@
  */
 require_once("config.php");
 require_once("Replacer.php");
-require_once("../Tau.php");
+require_once( APPLICATION_PATH . "/tau/Tau.php");
 
 class PageRender {
 
