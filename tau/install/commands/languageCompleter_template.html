@@ -3,29 +3,7 @@
     <head>
         <title>Language Completer</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-        <style>
-            body{
-                color: rgb(90, 90, 90);
-                display: inline;
-                font-family: monospace, serif;
-                font-size: 14px;
-                height: auto;
-                line-height: 22.399999618530273px;
-                white-space: pre-wrap;
-                width: auto;
-            }
-
-            .success{
-                color:#0a0;
-            }
-            .red{
-                color:#f00;
-            }
-            .main{
-                margin:15px;
-                margin-left: 25px;
-            }
-        </style>
+        <link rel="stylesheet" type="text/css" href="../install.css">
     </head>
     <body>
        
@@ -33,17 +11,33 @@
     
     <p>Editing translations for file {{replace_full_filename}}</p>
     <hr>
-    
+    <form id="frmLangCompleter" name="frmLangCompleter" action="javascript:languageCompleter.sendForm(this);">
+        
     {{replace_content}}
     
-    {{tau_eafbbec_replace_testing}}
     
-    {probando_1}
+    <input type="checkbox" id="replace_in_local" name="replace_in_local" /> <label for="replace_in_local"> Replace in local file: Will write the changes in the file</label> <br/>
+    <input type="checkbox" id="create_sql"  name="create_sql" /> <label for="create_sql"> Create SQL : Will create the required SQL to save this modifications in any db</label> <br/>
+    <input type="checkbox" id="execute_sql" name="execute_sql" /> <label for="execute_sql"> Save into current database : Will execute previous SQL into current database.</label> <br/>
+    <input type="hidden"   id="filepath"    name="filepath" value="{{replace_full_filename}}" />
+    <input  type="submit" name="btnSubmit" value="Execute" /> 
+    </form>
+   
+    <p>Notifications: <span id="notifications"></span></p>
+    <p>Received SQL statements:</p>
+    <div id="received_sql">
+        
+    </div>
     
-    replace_static_data
-    {{{only_main_data_allowed}}}
+   
+    
 </div>
         <hr>
         {{replace_footer}}
+        
+        
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+        <script src="./js/languageCompleter.js"></script>
     </body>
+    
 </html>

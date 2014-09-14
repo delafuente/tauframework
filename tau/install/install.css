@@ -1,0 +1,49 @@
+/* 
+    Document   : install
+    Created on : 07-sep-2014, 17:43:53
+    Author     : lucas
+    Description:
+        Purpose of the stylesheet follows.
+*/
+
+
+
+
+body{
+    color: rgb(90, 90, 90);
+    display: inline;
+    font-family: monospace, serif;
+    font-size: 14px;
+    height: auto;
+    line-height: 22.399999618530273px;
+    white-space: pre-wrap;
+    width: auto;
+}
+
+.success{
+    color:#0a0;
+}
+.red{
+    color:#f00;
+}
+.main{
+    margin:15px;
+    margin-left: 25px;
+}
+.tf{
+    color:#0000e6;
+}
+.lightgreen{
+    color:#11c411;
+    font-weight:bolder;
+}
+.constant{
+    color:#8000ff;
+}
+
+input{
+    width: 300px;
+}
+label{
+    cursor:pointer;
+}
