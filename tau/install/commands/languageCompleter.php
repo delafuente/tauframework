@@ -92,12 +92,7 @@ foreach($matches as $match){
             $formTable .= "<td><textarea cols='25' rows='2' id='$identifier' class='inputs$class' name='$identifier' >".$currentContent."</textarea></td>";
             
         }
-        //$myMatches .= "<p>match: $coincidence will translate to <span class='success'>{{" . $tokens[$coincidence]  ."}}</span> and  {$tokens[$coincidence]} in database</p>";
-        /*
-        if($tokens[$coincidence] ==  substr($coincidence, 2, strlen($coincidence) - 4)){
-            //The token was prefixed, and automated already by tau framework
-            $myMatches .= "<p>$coincidence is yet in database </p>";
-        }*/
+        
         $formTable .= "</tr>";
     }
     
