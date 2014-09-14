@@ -92,6 +92,7 @@ $createSQL = $createSqlTemplate . trim($createSQL, ",\n") . ";\n";
 //file_put_contents("output.txt", "Update SQL:\n" . implode("\n", $updateSQL), FILE_APPEND);
 
 $operations = array();
+$needToSave = ($execute_sql || $create_sql)?true:false;
 
 $mainSQLArray = $updateSQL;
 if ($someInputIsNew) {
@@ -115,6 +116,20 @@ if ($create_sql) {
     $operations['create_sql'] = array("success", $mainSQLArray);
 } else {
     $operations['create_sql'] = array("not_required");
+}
+
+if($needToSave){
+    
+    $fileToWriteOn = SAVE_GENERATED_SQL_FOLDER . "/" . Tau::tau_get_group($full_filename) . "_" . time() . ".sql";
+    
+    $saveSQL = "-- TauFramework auto-generated sql to modify translations \n";
+    $saveSQL .= "-- generated on " . date("Y-m-d H:m:s",time()) . " \n\n";
+    
+    foreach ($mainSQLArray as $sqlSentence){
+        $saveSQL .= $sqlSentence . "\n";
+    }
+    
+    file_put_contents($fileToWriteOn,$saveSQL);
 }
 
 if ($replace_in_local) {
