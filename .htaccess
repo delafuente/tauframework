@@ -7,11 +7,22 @@ Options -Indexes
 
 ServerSignature Off
 
+#Remove always trailing slash. The next rule is the opposite
+#RewriteRule ^(.*)/$ $1 [R=301,L]
+
 #Add trailing slash to folders
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} !\..+$
-RewriteCond %{REQUEST_URI} !/$
-RewriteRule (.*) http://%{HTTP_HOST}/$1/ [L,R=301]
+#RewriteCond %{REQUEST_FILENAME} !-f
+#RewriteCond %{REQUEST_URI} !\..+$
+#RewriteCond %{REQUEST_URI} !/$
+#RewriteRule (.*) http://%{HTTP_HOST}/$1/ [L,R=301]
+
+#Redirect calls to images, js and css, all langs
+#RewriteRule ^(.*)images/(.*)$ images/$2 [NC,L]
+#RewriteRule ^(.*)uploads/(.*)$ uploads/$2 [NC,L]
+#RewriteRule ^(.*)font/(.*)$ font/$2 [NC,L]
+#RewriteRule ^(.*)css/(.*)$ css/$2 [NC,L]
+#RewriteRule ^(.*)js/(.*)$ http://%{HTTP_HOST}/js/$2 [NC,L]
+#RewriteRule ^(.*)gallery/(.*)$ gallery.php?path=$2 [NC,L]
 
 #Disable php execution inside images folder
 #Uncomment this if you want to use it. Put here or in your VirtualHost file
@@ -33,10 +44,12 @@ RewriteRule ^[a-z]{2}/$ index.php?lang=$1 [NC,L]
 #Redirect php files, and do other parse ( not L clause )
 RewriteRule ^[a-z]{2}/(.*\.php)$ $1/$2/ [NC]
 
+#Redirect not matched like a folder, and do other parse ( not L clause )
+RewriteRule ^[a-z]{2}/(.*)$ $1/$2/
+
 #Redirect all es/name folders to php files counterpart, es/name -> /name.php?lang=es
 RewriteRule ^[a-z]{2}/(.*)/(.*)$ $2.php$3 [NC,L]
 
-#Redirect not matched like a folder, and do other parse ( not L clause )
-RewriteRule ^[a-z]{2}/(.*)$ $1/$2/
+
 
 </IfModule>

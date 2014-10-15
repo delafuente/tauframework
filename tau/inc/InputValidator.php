@@ -1,7 +1,5 @@
 <?php
 
-session_start();
-
 /**
  * Validates input data before to reach DB, and also
  * test reCaptcha fields and prevents re-writtign the same
@@ -20,7 +18,7 @@ require_once('config.php');
 require_once('recaptcha/recaptchalib.php');
 require_once('DataManager.php');
 require_once('LanguageLoader.php');
-require_once('../../Tau.php');
+require_once( APPLICATION_PATH . '/tau/Tau.php');
 
 class InputValidator {
 
@@ -58,7 +56,7 @@ class InputValidator {
         $inputArray = $this->db->escape($inputArray);
 
         /* Check the form is not posted twice */
-        if (isset($inputArray['form_hash'])) {
+        if (isset($inputArray['form_hash']) && !ALLOW_FORM_DATA_REFRESH ) {
 
 
             if (isset($_SESSION['last_form_hash']) && ($_SESSION['last_form_hash'] == $inputArray['form_hash'])) {
@@ -104,7 +102,7 @@ class InputValidator {
     protected function redirectToError($message) {
         if ($this->redirectOnErrors) {
             $_SESSION['last_error'] = $message;
-            header("Location: /error/");
+            header("Location: " .APPLICATION_BASE_URL . "/". APP . "/error/");
             die();
         }
     }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * 
  * @abstract Handles form creation
@@ -12,47 +13,52 @@
 define('__ROOT__', str_replace("\\","/",dirname(dirname(__FILE__))) );
 
 require_once(__ROOT__ . "/tau/inc/config.php");
-require_once(__ROOT__ . "/tau/inc/DataManager.php");
 require_once(__ROOT__ . '/tau/inc/recaptcha/recaptchalib.php');
 
-class TauForm {
+class TauFormOld {
     
     protected $id;
     protected $name;
     protected $action;
+    protected $divWidth; // %
+    protected $divLeftMargin; //px
     protected $encType;
     protected $extraFormAttributes;
-    protected $defaultTheme;
-    protected $themeMapping;
+
     protected $formTitle;
     
     protected $htmlBefore; //html to be prepended to the form
     protected $htmlAfter; //html to be appended to the form
-
+    protected $tabeledForm; //boolean, if set, the output will be within a table (default), or into divs otherwise
     
     protected $elements; //array of elements
     protected $elementNames; //array with the elements' names
     protected $elementValidation; //array with the elements' validation rules
     protected $elementTypes; //string array of element types (input text, select, etc )
-    protected $elementLabels; //string array with input label-for texts  
+    protected $elementLabels; //string array with input label-for texts
+    protected $elementRequiredClasses; //string array with span "required" * class, if required
+    protected $elementPostInputHtml; //string array with html to put after the input, like hints or help
     protected $hiddenInputs; //String with all hidden inputs
-    protected $elementReplacers; //Array of all replacements of replacement => replace with
-    protected $modelData; //holds the row of the model if necessary
-    protected $modelMapping; //holds the map of [table_field_name] = field_id
-   
+  
+    
+    protected $mainContainerDivId;
+    protected $mainContainerDivName;
+    protected $mainContainerDivClasses;
+    protected $elementsWidth; //Forced width of inputs 
+    protected $submitValue; //Submit button text
     /**
      * Creates a new Form object
      * @param string $id The html id
      * @param string $action The form action value
-     * @param string $theme The folder theme name
      * @param string $name The html name, default is equals to id
      * @param string $enctype The form enctype
      * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value,
      * like $myAttributeArray['accept']="jpg,png"
      */
-    public function __construct($id, $action, $theme ='default', $name=false, $enctype='multipart/form-data', $extraAttributes=false){
+    public function __construct($id,$action,$name=false,$enctype='multipart/form-data',$extraAttributes=false){
         
-
+        $this->divWidth=70; //default hardcoded
+        $this->divLeftMargin=0; //default hardcoded
         
         $this->id = $id;
         $this->action = $action;
@@ -68,87 +74,45 @@ class TauForm {
         }
         $this->htmlAfter="";
         $this->htmlBefore="";
-        $this->defaultTheme = $theme;
+        $this->tabeledForm = true;
         $this->formTitle = $name;
         $this->hiddenInputs = "";
 
-
+        $this->mainContainerDivId = "container_" . $this->name;
+        $this->mainContainerDivName = $this->mainContainerDivId;
+        $this->mainContainerDivClasses = false;
         
         $this->elements = array();
         $this->elementTypes = array();
         $this->elementNames = array();
         $this->elementValidation = array();
         $this->elementLabels = array();
-        //$this->elementRequiredClasses = array();
-        //$this->elementPostInputHtml = array();
-        $this->modelData = false;
-        $this->modelMapping = false;
-        $this->setThemeMapping();
+        $this->elementRequiredClasses = array();
+        $this->elementPostInputHtml = array();
+        $this->submitValue = "Enviar";
+        $this->elementsWidth = 300; //forced width of inputs
+    }
+
+    public function setSubmitButtonText($text){
+        $this->submitValue = $text;
+    }
+    public function changeElementsWidth($width){
+        $this->elementsWidht = $width;
     }
     /**
-     * For existing data, get the row information to show in form
-     * @param type $model Table name
-     * @param type $search_field_name Field name to select in where
-     * @param type $search_field_value The value to be compared with field name
-     * @param string $db_name Optional, to search the row in not default database
+     * Css width percentaje of container div
+     * @param int $divWidth The % of width of container div
      */
-    public function setModelAndRow($model, $search_field_name, $search_field_value, $db_name = false){
-        if(!$db_name){
-            $db_name = "";
-        }
-        $this->modelData = DataManager::getInstance($db_name)->getRow("select * from $model where $search_field_name = '$search_field_value' limit 1;");
-        
-        $this->modelMapping = array();
-        foreach($this->modelData as $key => $value){
-            $this->modelMapping[$key] = $key;
-        }
+    public function setDivWidth($divWidth){
+        $this->divWidth = $divWidth;
     }
     /**
-     * If table fields and html fields names aren't identical, we need to add
-     * a mapping of type html_field => table_field. We need to map only fields needed.
-     * @param array $modelMapping The array with the mapping
+     * Css left margin pixels of container div
+     * @param int $leftMarginDiv Left-margin div css property in pixels
      */
-    public function setModelMapping(array $modelMapping){
-        $this->modelMapping = $modelMapping;
+    public function setLeftMarginDiv($leftMarginDiv){
+        $this->divLeftMargin = $leftMarginDiv;
     }
-    protected function setThemeMapping(){
-        $this->themeMapping = array(
-            'button' => 'templates/{rep_theme}/forms/button.html',  
-            'checkbox' => 'templates/{rep_theme}/forms/checkbox.html',
-            'checkboxes_group' => 'templates/{rep_theme}/forms/checkboxes_group.html',
-            'container' => 'templates/{rep_theme}/forms/container.html',
-            'datepicker' => 'templates/{rep_theme}/forms/datepicker',
-            'file' => 'templates/{rep_theme}/forms/file.html',
-            'file_image' => 'templates/{rep_theme}/forms/file_image.html',
-            'form' => 'templates/{rep_theme}/forms/form.html',
-            'hidden' => 'templates/{rep_theme}/forms/hidden.html',
-            'linked_select' => 'templates/{rep_theme}/forms/linked_select.html',
-            'options_group' => 'templates/{rep_theme}/forms/options_group.html',
-            'password' => 'templates/{rep_theme}/forms/password.html',
-            'select' => 'templates/{rep_theme}/forms/select.html',
-            'select_option' => 'templates/{rep_theme}/forms/select_option.html',
-            'submit' => 'templates/{rep_theme}/forms/submit.html',
-            'text' => 'templates/{rep_theme}/forms/text.html',
-            'textarea' => 'templates/{rep_theme}/forms/textarea'
-        );
-    }
-    
-    protected function getTemplate($template, $theme = false){
-        if($theme == false){ $theme = $this->defaultTheme; }
-        $templateFile = APPLICATION_PATH . "/" . APP_SLUG ."/". str_replace('{rep_theme}',$theme, $this->themeMapping[$template]);
-        
-        if(file_exists($templateFile)){
-            return file_get_contents($templateFile);
-        }else{
-            if(!PRODUCTION_ENVIRONMENT){
-                return "<p style='color:#f00;'>File not found for template '$template', while loading form for theme '$theme' : $templateFile</p>";    
-            }else{
-                return "";
-            }
-            
-        }
-    }
-    
     /**
      * Set the caption of the form
      * @param string $title The caption of the form
@@ -163,30 +127,30 @@ class TauForm {
      * Inserts an input text, the order of insertion is the order of appearance
      * @param string $id The html id
      * @param string $validationRules The encoded validation rules for javascript, see help on validation
-     * @param string $theme Theme of the input. Same as form theme if not specified.
      * @param string $label The 'label for' text of the element, like "Insert your e-mail"
+     * @param string $requiredClass If not false, adds an * after the label in a span with this class or space separated classes.
+     * @param string $postInputHtml Html to be written just after the input, like help or hint
      * @param string $name The html name, if false (default) it's equals to id. Must be unique.
+     * @param string $cssClasses The css classes, space separated
      * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
-     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
-     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value,
+     * like $myAttributeArray['onChange']="javascript:testValue();" or $myAttributeArray['placeholder']='Enter your e-mail'
      */
-    public function addInputText(
-            $id,
-            $validationRules = false,
-            $label = false,
-            $theme = false, 
-            $name = false,
-            $defaultValue = false,
-            array $extraAttributes = null,
-            array $autoReplacers = null){
+    public function addInputText($id,$validationRules=false,$label=false,$requiredClass=false,
+            $postInputHtml=false,$name=false,$cssClasses=false,$defaultValue=""
+            ,$extraAttributes=false){
         
         $inputData = $this->generalInputDataFormatter($id, $validationRules,
-                $label, $name, $defaultValue, $extraAttributes, $autoReplacers);
-        
-        $input = $this->getTemplate('text', $theme);
-        $attributeReplacements = array('{replace_id}', '{replace_name}', '{replace_label}', '{replace_value}', '{extra_attributes}');
-        $attributeReplacers = array($inputData['id'], $inputData['name'], $inputData['label'], $inputData['value'], $inputData['extraAttributesHtml']);
-        $input = str_replace($attributeReplacements, $attributeReplacers, $input);
+                $label, $requiredClass, $postInputHtml, $name, $cssClasses,
+                $defaultValue, $extraAttributes);
+
+        $input = "\t<input type='text' id='" .$inputData['id']. "' name='".
+        $inputData['name']."' ";
+
+        $input .= $inputData['classes'] . $inputData['value'];
+        $input .= $inputData['extraAttributesHtml'];
+        $input .= " style='width:" . $this->elementsWidth . "px'";
+        $input .= " />\n";
         
         $this->saveData($input, 'text', $inputData);
         
@@ -254,7 +218,7 @@ class TauForm {
 
         $input .= $inputData['classes'];
         $input .= $inputData['extraAttributesHtml'];
-        $input .= " style=''";
+        $input .= " style='width:" . $this->elementsWidth . "px'";
         $input .= " >\n";
         $input .= $defaultValue . "</textarea>\n";
         
@@ -286,7 +250,7 @@ class TauForm {
 
         $input .= $inputData['classes'] . $inputData['value'];
         $input .= $inputData['extraAttributesHtml'];
-        $input .= " style=''";
+        $input .= " style='width:" . $this->elementsWidth . "px'";
         $input .= " />\n";
         
         $this->saveData($input, 'password', $inputData);
@@ -316,7 +280,7 @@ class TauForm {
 
         $input .=  $inputData['value'];
         $input .= $inputData['extraAttributesHtml'];
-        $input .= " style=''";
+        $input .= " style='width:" . $this->elementsWidth . "px'";
         $input .= " />\n";
 
         $this->saveData($input, 'hidden', $inputData);
@@ -349,6 +313,13 @@ class TauForm {
                 $label, $requiredClass, $postInputHtml, $name, $cssClasses,
                 $defaultValue, $extraAttributes);
 
+        /*$input = "\t<input type='password' id='" .$inputData['id']. "' name='".
+        $inputData['name']."' ";
+
+        $input .= $inputData['classes'] . $inputData['value'];
+        $input .= $inputData['extraAttributesHtml'];
+        $input .= " style='width:" . $this->elementsWidth . "px'";
+        $input .= " />\n";*/
 
         $this->saveData($captcha_html, 'reCaptcha', $inputData);
 
@@ -370,28 +341,72 @@ class TauForm {
     public function prependHtml($html){
         $this->htmlBefore = $html;
     }
+    /**
+     * The form will be output contained in divs
+     */
+    public function setDivOutput(){
+        $this->tabeledForm = false;
+    }
+    /**
+     * The form will be output contained in a table
+     */
+    public function setTableOutput(){
+        $this->tabeledForm = true;
+    }
+    /**
+     * Overrides the main container data
+     * @param string $id The html id of the div
+     * @param string $name The html name of the div
+     * @param string $classes The space separated css classes of the div
+     */
+    public function setMainContainerDiv($id,$name=false,$classes=false){
+        $this->mainContainerDivId = $id;
+        $this->mainContainerDivClasses = $classes;
+        if($name){
+            $this->mainContainerDivName = $name;
+        }
+    }
     
     /**
      * Get the constructed form in html format
-     * @param string $containerTheme container theme, if you want to use other
      * @return string The html form
      */
-    public function toString($containerTheme = false){
-
-        $html = "\n";
+    public function toString(){
+        //debug
+        //$container = "<textarea name='testtextarea' cols='130' rows='50' style='width:100%'>";
+        //$end_container = "</textarea>";
+        //end debug
+        $html = $this->htmlBefore . "\n";
         
-        $extraAttributes = "";
+        $html .= "<div id=\"" . $this->mainContainerDivId . "\" name=\"" .
+                $this->mainContainerDivName . "\" ";
+        if($this->mainContainerDivClasses){ 
+            $html .= " class=\"" . $this->mainContainerDivClasses .
+                "\" ";
+        }
+        $html .= " style=\"width:" . $this->divWidth . "%;margin-left:" .
+                $this->divLeftMargin . "px;\" >\n"; //End of outer div signature
+
+        $html .= '<form id="' . $this->id . '" name="' . $this->name . '" '.
+                'action="' . $this->action . '" method="post" ' .
+                'enctype="' . $this->encType . '" ';
+
         if($this->extraFormAttributes){
             foreach($this->extraFormAttributes as $attrName => $attrValue){
-                $extraAttributes .= ' ' . $attrName . '="' . $attrValue . '" ';
+                $html .= ' ' . $attrName . '="' . $attrValue . '" ';
             }
         }
+        $html .= " >\n"; //End of form signature
         
-        $html .= $this->getTemplate('form');
-        $attributeReplacements = array('{replace_id}','{replace_name}','{replace_action}','{replace_method}', '{replace_enctype}', '{extra_attributes}');
-        $attributeReplacers = array($this->id, $this->name, $this->action, 'post', $this->encType, $extraAttributes);
-        $html = str_replace($attributeReplacements, $attributeReplacers, $html);
-
+        if($this->tabeledForm){
+            $html .= "\t<table>\n";
+            $html .= "<tr><th colspan='2'>" . $this->formTitle . "</th></tr>";
+            $closeTable = "\t</table>\n";
+        }else{
+            $html .= "<span>" . $this->formTitle . "</span>";
+            $closeTable = "";
+        }
+        
         $i=-1;
         foreach ($this->elements as $element){
             $i++;
@@ -403,30 +418,20 @@ class TauForm {
                 $names .= "," . $this->elementNames[$i];
 
             }
-            $elem = $this->getElement($i);
-            if(isset($this->elementReplacers[$i])){
-                $filters = $this->elementReplacers[$i];
-                foreach($filters as $replacement => $replaceWith){
-                    $elem = str_replace($replacement, $replaceWith, $elem);
-                }
-            }
-            $html .= $elem;
+            $html .= $this->getElement($i);
         }
 
         $html .= $this->getSubmitButton();
-
-        $html .= "</form>\n"; 
         
-        $container = $this->getTemplate('container', $containerTemplate);
-        
-        $html = str_replace("{replace_form}",$html,$container);
-        
+        $html .= $closeTable;
+        $html .= "</form>\n</div>\n"; //main div container end
         $html .= "<!--googleoff: all -->\n";
         $html .= "<span style='visibility:hidden' id='rr_names_" . $this->id . "'>" . $names . "</span>\n";
         $html .= "<span style='visibility:hidden' id='rr_rules_" . $this->id . "'>" . $validation . "</span>\n";
         $html .= "<!--googleon: all -->\n";
-        $html .= "\n";
+        $html .= $this->htmlAfter . "\n";
         
+        //$html = $container .  $html . $end_container . "<br/>" . $html;
         
         return $html;
     }
@@ -440,12 +445,42 @@ class TauForm {
      */
     protected function getElement($counter){
         
+        $tdLeftAlign = "";
+        if($this->elementTypes[$counter]=='checkbox'){
+            $tdLeftAlign = " style='text-align:left;' ";
+        }
         if($this->elementTypes[$counter]=='hidden'){
             $this->hiddenInputs .= $this->elements[$counter] . "\n";
             return "";
         }
+        $html ="";
+        if($this->tabeledForm){
+            $beginRow = "\t\t<tr><td>\n";
+            $innerRow = "\t\t</td><td$tdLeftAlign>\n";
+            $endRow = "\n\t\t</td></tr>\n\n";
+        }else{
+            $beginRow = "\t\t<span class='beginRowForm'>\n";
+            $innerRow = "\t\t</span><span class='endRowForm'>\n";
+            $endRow = "\t\t</span>\n";
+        }
         
-        return $this->elements[$counter];
+        if($this->elementRequiredClasses[$counter]){
+            $required = "<span class='" . $this->elementRequiredClasses[$counter] . "'> *</span>";
+        }else{
+            $required = "";
+        }
+        
+        $html .= $beginRow . " \t<label for='" . $this->elementNames[$counter] . "'>";
+        $html .= $this->elementLabels[$counter] . $required . "</label> ";
+        $html .= $innerRow;
+        $html .= $this->elements[$counter];
+        if($this->elementPostInputHtml[$counter]){
+            $html .= $this->elementPostInputHtml[$counter];
+        }
+        $html .= $endRow;
+        
+        
+        return $html;
     }
     /**
      * Obtains a formatted submit button
@@ -454,13 +489,22 @@ class TauForm {
     protected function getSubmitButton(){
 
         $html ="";
-        
+        if($this->tabeledForm){
+            $beginRow = "\t\t<tr><td></td><td style='padding-top:20px;text-align: center;padding-right: 56px;'>\n";
+            $innerRow = "";
+            $endRow = "\n\t\t</td></tr>\n\n";
+        }else{
+            $beginRow = "\t\t<span class='beginRowForm'>\n";
+            $innerRow = "\t\t</span><span class='endRowForm'>\n";
+            $endRow = "\t\t</span>\n";
+        }
+
         $hidden_form_hash ='<input type="hidden" id="form_hash" name="form_hash" value="replace_form_hash" />' . "\n";
         $sendButton='<input id="sendButton" name="sendButton" type="button"' .
         'value="' . $this->submitValue  .'" style="float:right;top:10px;" class="button highlight" onclick="javascript:tauValidation.testToSend(\'' .
                 $this->id . '\');"/> <br/>' . "\n";
     
-        $html =  $hidden_form_hash . $this->hiddenInputs . $sendButton ;
+        $html = $beginRow . $innerRow . $hidden_form_hash . $this->hiddenInputs . $sendButton . $endRow;
 
         return $html;
     }
@@ -469,38 +513,43 @@ class TauForm {
      * Common input data parser, to be used for all get<InputElement>() methods
      * @param string $id The html id
      * @param string $validationRules The encoded validation rules for javascript, see help on validation
-     * @param string $label The 'label for' text of the element, like "Insert your e-mail".
+     * @param string $label The 'label for' text of the element, like "Insert your e-mail"
+     * @param string $requiredClass If not false, adds an * after the label in a span with this class or space separated classes.
+     * @param string $postInputHtml Html to be written just after the input, like help or hint
      * @param string $name The html name, if false (default) it's equals to id. Must be unique.
-     * @param string $value The input value. If you want a 'placeholder' attribute, use the extraAttributes array.
+     * @param string $cssClasses The css classes, space separated
+     * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
      * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value,
-     * like $myAttributeArray['onChange']="javascript:testValue();"
-     * @param array $autoReplacers array with key=>value replacement=>replaceWith for custom replacements in html form template
+     * like $myAttributeArray['onChange']="javascript:testValue();" or $myAttributeArray['placeholder']='Enter your e-mail'
+     * @param string $typeInput The type of the input if needed ( like 'hidden' )
      * @return array Associative array with all formatted data, with the exception of defaultValue, returned as is for textarea like to use
      */
-    protected function generalInputDataFormatter($id,$validationRules,$label,
-        $name,$value,$extraAttributes,$autoReplacers){
+    protected function generalInputDataFormatter($id,$validationRules,$label,$requiredClass,$postInputHtml,
+        $name,$cssClasses,$defaultValue,$extraAttributes,$isHidden=false){
 
+        $requiredClass = ($requiredClass)?$requiredClass:"";
+        $postInputHtml = ($postInputHtml)?$postInputHtml:"";
         $validationRules = ($validationRules)?$validationRules:"o";
         $name = ($name)?$name:$id;
-        $value = ($defaultValue)?$defaultValue:"";
+        $classes = ($cssClasses)?" class='" . $cssClasses . "' ":"";
+        $value = ($defaultValue)?" value='" . $defaultValue . "' ":"";
         $label = ($label)?$label:"";
-        
         if($extraAttributes){
             foreach($extraAttributes as $attrKey => $attrValue){
                 $extraAttributesHtml .= " " . $attrKey . "='" . $attrValue . "' ";
             }
         }
-        
-        if($this->modelData !== false){ $value = $this->modelData[$this->modelMapping[$name]]; }
-        
         $returnData = array();
-        $returnData['id'] = $id;
-        $returnData['validationRules'] = $validationRules;
-        $returnData['label'] = $label;
-        $returnData['name'] = $name;
-        $returnData['value'] = $value;
-        $returnData['extraAttributesHtml'] = $extraAttributesHtml;
-        $returnData['autoReplacers'] = $autoReplacers;
+        $returnData['id']=$id;
+        $returnData['validationRules']=$validationRules;
+        $returnData['label']=$label;
+        $returnData['requiredClass']=$requiredClass;
+        $returnData['postInputHtml']=$postInputHtml;
+        $returnData['name']=$name;
+        $returnData['classes']=$classes;
+        $returnData['value']=$value;
+        $returnData['defaultValue']=$defaultValue; //for use in textarea, for example.
+        $returnData['extraAttributesHtml']=$extraAttributesHtml;
 
         return $returnData;
     }
@@ -509,10 +558,13 @@ class TauForm {
         $this->elementTypes[] = $type;
         $this->elementValidation[] = $inputData['validationRules'];
         $this->elements[] = $input;
+        $this->elementPostInputHtml[] = $inputData['postInputHtml'];
+        $this->elementRequiredClasses[] = $inputData['requiredClass'];
         $this->elementLabels[] = $inputData['label'];
-        $this->elementReplacers[] = $inputData['autoReplacers'];
     }
 
 
 
 }
+
+?>
