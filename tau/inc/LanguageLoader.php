@@ -72,7 +72,7 @@ class LanguageLoader {
                 $text = str_replace("replace_ff_lang",$language,$text);
 
             }
-                if($_SESSION['vanilla'] && $parseVanilla){
+                if(isset($_SESSION['vanilla']) && $parseVanilla){
                     $translations[$item] = "%%" . $item . "%%";
                 }else{
                     $translations[$item] = $text;

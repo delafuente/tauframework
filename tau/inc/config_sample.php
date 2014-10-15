@@ -63,10 +63,6 @@ if( APPLICATION_ENVIRONMENT == 'local' ){
     
 }
 
-ini_set('log_errors', true);
-ini_set('html_errors', false);
-ini_set('error_log', LOG_PATH . '/php_error_' . strtolower(ENV_NAME));
-ini_set('display_errors', false);
 
 define('LOCAL_DRIVE',"C"); //For Windows users
 
@@ -77,6 +73,11 @@ define('MYAPP',APP_SLUG . "/");
 $template_slug = APP_SLUG . "/";
 
 require_once(SETTINGS_FILE);
+
+ini_set('log_errors', true);
+ini_set('html_errors', false);
+ini_set('error_log', LOG_PATH . '/php_error_' . strtolower(ENV_NAME));
+
 
 
 function setEnvironment($env) {

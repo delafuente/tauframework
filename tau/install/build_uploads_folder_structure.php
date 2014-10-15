@@ -15,7 +15,7 @@ if (APPLICATION_INSTALLED || file_exists("app_installed")) {
 }
 
 $logger = new LogFile(
-                true, "installMakeUploadsFolders.php", true); //see params to set append or overwrite, and change file
+                true, "installMakeUploadsFolders.txt", true); //see params to set append or overwrite, and change file
 
 $folderCharsList = "a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,0,1,2,3,4,5,6,7,8,9";
 $folderChars = explode(",", $folderCharsList);

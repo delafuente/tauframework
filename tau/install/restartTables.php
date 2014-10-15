@@ -26,8 +26,8 @@ if(APPLICATION_ENVIRONMENT != 'local'){
 
 echo "<h4>Deleting and recreating database test</h4>";
 
-echo "<p>drop database result: " . $db->makeQuery("drop database test;") . "</p>";
-echo "<p>create database result: " . $db->makeQuery("create database test;") . "</p>";
+echo "<p>drop database result: " . $db->makeQuery("drop database " . DB_NAME) . "</p>";
+echo "<p>create database result: " . $db->makeQuery("create database " . DB_NAME) . "</p>";
 
 
 ?>
