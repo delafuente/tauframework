@@ -34,6 +34,7 @@ class Tau {
             $this->lang = $_COOKIE['lang'];
         } else {
             $this->lang = DEFAULT_LANG_ABBR;
+            setcookie('lang', DEFAULT_LANG_ABBR, time() + SECONDS_ONE_MONTH, APPLICATION_BASE_URL);
         }
     }
 

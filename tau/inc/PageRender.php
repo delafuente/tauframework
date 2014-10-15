@@ -12,6 +12,7 @@
 require_once("config.php");
 require_once("Replacer.php");
 require_once( APPLICATION_PATH . "/tau/Tau.php");
+require_once( APPLICATION_PATH . "/tau/inc/LanguageLoader.php");
 
 class PageRender {
 
@@ -250,10 +251,16 @@ class PageRender {
         
         
         //Validation texts
-        $validation_text = $this->getStringFromFile(APPLICATION_PATH . "/js/lang/" . $this->lang_code . "/lang_validation.js");
+        //$validation_text = $this->getStringFromFile(APPLICATION_PATH . "/js/lang/" . $this->lang_code . "/lang_validation.js");
+        
+        $js_validation = LanguageLoader::getInstance()->getTranslations("js_validation", APPLICATION_BASE_URL, $this->lang);
+        $validation_text = "var tau_validation = new Array();\n";
+        foreach ($js_validation as $js_key => $js_val){
+            $validation_text .= "tau_validation['$js_key'] = \"$js_val\";\n";
+        }
         //Constants
-        $constants = "const APP_BASE_URL='" . APPLICATION_BASE_URL . "';";
-        $constants .= "const LANG='" . $this->lang . "';";
+        $constants = "const APP_BASE_URL='" . APPLICATION_BASE_URL . "';\n";
+        $constants .= "const LANG='" . $this->lang . "';\n";
         $endPage = str_replace("<head>","<head>\n\n<script language='javascript'>\n\n" . $validation_text . "\n" .$constants. "\n\n</script>\n\n",$endPage);
         
         Tau::getInstance()->hookAfterRender();
