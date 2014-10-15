@@ -6,3 +6,4 @@
 /sampleapp/cache
 /tau/inc/config.php
 /tau/inc/settings.php
+.DS_Store
