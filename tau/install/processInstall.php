@@ -15,17 +15,20 @@ define('__ROOT__', str_replace("\\", "/", dirname(dirname(__FILE__))));
 require_once( __ROOT__ . "/../tau/inc/config.php");
 require_once( __ROOT__ . "/../tau/Tau.php" );
 require_once( __ROOT__ . "/../tau/inc/DataManager.php");
+
 require_once( __ROOT__ . "/../tau/install/TauInstall.php");
 require_once( __ROOT__ . "/../tau/inc/InputValidator.php");
 require_once( __ROOT__ . "/../tau/inc/LogFile.php");
+
+$tau = Tau::getInstance();
+$tauInstall = new TauInstall();
+$modules = array(); //array with selected modules
+
 ?>
 <link rel="stylesheet" type="text/css" href="install.css">
 <div class="main">
 <?php
 
-$tau = Tau::getInstance();
-$tauInstall = new TauInstall($db);
-$modules = array(); //array with selected modules
 
 echo "<h3>" . Tau::getTauGreek() . " Framework installation: </h3><br/>";
 

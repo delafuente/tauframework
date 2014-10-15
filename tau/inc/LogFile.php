@@ -26,11 +26,14 @@ class LogFile {
      */
     function __construct($debugmode, $filename='error.php', $overwrite_last_file=true) {
         $this->log_mode = $debugmode;
-        $this->filepath = LOG_PATH . $filename;
+        if(!file_exists(LOG_PATH)){
+            mkdir(LOG_PATH);
+        }
+        $this->filepath = LOG_PATH . "/" . $filename;
         
         if(!file_exists($this->filepath)){
             file_put_contents($this->filepath, "<?php if(\$_SERVER['SERVER_NAME']=='". CANONICAL_APP_NAME."'){ die('nothing to see here'); }else{ echo 'file " . $this->filepath . " created on " .
-                    date("Y-m-d H:i:s",time()) . " <br/><br/>'; } ?>\n\n", FILE_APPEND);
+                    date("Y-m-d H:i:s",time()) . " <br/><br/>'; } ?>\n\n");
         }
         if ($overwrite_last_file) {
             $this->overwrite_mode = FILE_APPEND;

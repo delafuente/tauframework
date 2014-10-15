@@ -19,7 +19,7 @@ class TauInstall {
     protected $tables; //array with all tau tables
     protected $tablesSQL; //array with all table creation sql
     
-    public function __construct($db) {
+    public function __construct(DataManager $db = null) {
         
         if($db instanceof DataManager){
             $this->db = $db;
@@ -68,8 +68,13 @@ class TauInstall {
             }elseif(strpos($line,"-- --------------------------------------------------------") !== false){
                  $currentTable = "";
             }
+            if($currentTable != ""){
+            if(!isset($this->tablesSQL[$currentTable])){
+                    $this->tablesSQL[$currentTable] ="";
+                }
+                $this->tablesSQL[$currentTable] .= $line;
+            }
             
-            $this->tablesSQL[$currentTable] .= $line;
             
         }
         return $this->tablesSQL;
