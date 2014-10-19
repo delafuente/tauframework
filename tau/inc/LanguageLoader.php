@@ -50,7 +50,7 @@ class LanguageLoader {
      * @param boolean $parseVanilla If true, will print the replacers instead of replace with text
      * @return array A list of key - value array with all the translations of the group
      */
-    public function getTranslations($group,$base_url,$language, $parseVanilla = true){
+    public function getTranslations($group, $base_url, $language, $parseVanilla = true){
 
         if(isset($this->cache[$group][$language]) && is_array($this->cache[$group][$language])){
             $lines = $this->cache[$group][$language];
@@ -72,7 +72,7 @@ class LanguageLoader {
                 $text = str_replace("replace_ff_lang",$language,$text);
 
             }
-                if(isset($_SESSION['vanilla']) && $parseVanilla){
+                if( TauSession::get('vanilla') && $parseVanilla ){
                     $translations[$item] = "%%" . $item . "%%";
                 }else{
                     $translations[$item] = $text;

@@ -33,7 +33,7 @@ class Actions {
      * @param string $message The message that will be shown to the user.
      */
     public static function redirectToErrorPage($message,$lang){
-            $_SESSION['last_error'] = $message;
+            TauSession::put('last_error', $message);
             if(!isset($lang)){
                 $lang = DEFAULT_LANG_ABBR;
             }

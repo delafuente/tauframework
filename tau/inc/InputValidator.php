@@ -59,12 +59,12 @@ class InputValidator {
         if (isset($inputArray['form_hash']) && !ALLOW_FORM_DATA_REFRESH ) {
 
 
-            if (isset($_SESSION['last_form_hash']) && ($_SESSION['last_form_hash'] == $inputArray['form_hash'])) {
+            if (TauSession::get('last_form_hash') && (TauSession::get('last_form_hash') == $inputArray['form_hash'])) {
                 $texto .= $labels['FRM_YET_RECEIVED'];
                 $this->errors['repeatedForm'] = $texto;
                 $this->redirectToError($texto);
             } else {
-                $_SESSION['last_form_hash'] = $inputArray['form_hash'];
+                TauSession::get('last_form_hash', $inputArray['form_hash']);
             }
         }
 
@@ -101,7 +101,7 @@ class InputValidator {
 
     protected function redirectToError($message) {
         if ($this->redirectOnErrors) {
-            $_SESSION['last_error'] = $message;
+            TauSession::put('last_error', $message);
             header("Location: " .APPLICATION_BASE_URL . "/". APP . "/error/");
             die();
         }
