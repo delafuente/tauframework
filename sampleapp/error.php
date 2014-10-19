@@ -1,5 +1,4 @@
 <?php
-session_start();
 /**
  * 
  * @abstract Main error page sample, some errors will redirect here
@@ -11,5 +10,5 @@ session_start();
  * @license https://github.com/delafuente/tauframework/blob/master/LICENSE The MIT License (MIT)
  */
 
-echo "<p>" . $_SESSION['last_error'] . "</p>";
+echo "<p>" . TauSession::get('last_error') . "</p>";
 ?>

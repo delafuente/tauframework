@@ -113,7 +113,7 @@ function saveImageFile($nameFileInput,
     if($username){
         $usname = $username;
     }else{
-        $usname = strtolower($_SESSION['name_user']);
+        $usname = strtolower(TauSession::get('name_user'));
     }
     
     

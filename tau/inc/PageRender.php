@@ -51,8 +51,8 @@ class PageRender {
     }
 
     public function getTranslationGroup($full_file_path){
-    
-        $sha1 = substr(sha1($full_file_path), 0, 7);
+        $fileRelative = str_replace(APPLICATION_PATH, "", $full_file_path);
+        $sha1 = substr(sha1($fileRelative), 0, 7);
         
         return "tau_" . $sha1;
     }

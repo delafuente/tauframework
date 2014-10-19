@@ -44,15 +44,15 @@ class Authentication {
         $data = $this->dm->getRow($query);
         
         if($data && $data['pa_passwd'] == $password){
-            $_SESSION['valid_user']=true;
-            $_SESSION['role_user']= $data['vc_role'];
-            $_SESSION['type_user'] = $data['vc_role'];
-            $_SESSION['email_user']= $data['vc_email'];
-            $_SESSION['name_user']= $data['vc_name'];
-            $_SESSION['surname_user'] = $data['vc_surname'];
-            $_SESSION['nick_user']= $data['vc_username'];
-            $_SESSION['id_user']=$data['ui_id_user'];
-            $_SESSION['image_user']=$data['image'];
+            TauSession::put('valid_user', true);
+            TauSession::put('role_user', $data['vc_role']);
+            TauSession::put('type_user', $data['vc_role']);
+            TauSession::put('email_user', $data['vc_email']);
+            TauSession::put('name_user', $data['vc_name']);
+            TauSession::put('surname_user', $data['vc_surname']);
+            TauSession::put('nick_user', $data['vc_username']);
+            TauSession::put('id_user', $data['ui_id_user']);
+            TauSession::put('image_user', $data['image']);
             
             $query_data = "select * from user_data where id_user=" . $data['ui_id_user'] . " limit 1;";
             
@@ -60,14 +60,14 @@ class Authentication {
             $user_data = $this->dm->getRow($query_data);
             
             foreach($user_data as $key => $val){
-                $_SESSION[$key] = $val;
+                TauSession::put($key, $val);
             }
             
             
             $this->userData = $data;
             return true;
         }else{
-            $_SESSION['received_data'] = $nickOrMail . "|". $password;
+            TauSession::put('received_data', $nickOrMail . "|". $password);
             return false;
         }
 
@@ -84,8 +84,8 @@ class Authentication {
         // If it's desired to kill the session, also delete the session cookie.
         // Note: This will destroy the session, and not just the session data!
         if (isset($_COOKIE[session_name()])) {
-         setcookie(session_name(), '', time()-42000, '/');
-         setcookie(session_name(), '', time()-42000);
+            TauResponse::setCookie(session_name(), '', time() - 42000, '/');
+            TauResponse::setCookie(session_name(), '', time() - 42000);
         }
         // Finally, destroy the session.
         session_destroy();

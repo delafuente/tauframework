@@ -90,7 +90,18 @@ if (PRODUCTION_ENVIRONMENT) {
 }
 
 //Data that (normally) remains unchanged in every environment
+$autoloadPaths = array(
+  APPLICATION_PATH . "/tau/inc",
+    APPLICATION_PATH . "/tau/inc/framework",
+    WEB_PATH . "/tau/inc/modules"
+);
 
+$urlMap = array(
+    '' => 'controllers/index/index.php',
+    '404' => 'controllers/general/404.php',
+    'error' => 'controllers/general/error.php',
+    'media/search-{city}/{name}' => 'controllers/example/example.php'
+);
 /** Database Charset to use in creating database tables. */
 define('DB_CHARSET', 'utf8');
 /** The Database Collate type. Don't change this if in doubt. */

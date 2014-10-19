@@ -17,6 +17,8 @@ require_once( __ROOT__ . "/../../tau/inc/config.php");
 require_once( __ROOT__ . "/../../tau/inc/InputValidator.php");
 require_once( __ROOT__ . "/../../tau/Tau.php" );
 require_once( __ROOT__ . "/../../tau/inc/DataManager.php");
+require_once( __ROOT__ . "/../../tau/inc/framework/TauResponse.php");
+require_once( __ROOT__ . "/../../tau/inc/framework/TauSession.php");
 
 if(APPLICATION_ENVIRONMENT != 'local'){
     echo '<p>Cannot access this file</p>';
@@ -31,6 +33,8 @@ $template = file_get_contents("languageCompleter_template.html");
 $inputValidator = new InputValidator($_REQUEST);
 $cleanInput = $inputValidator->getCleanArray();
 $file = $cleanInput['file'];
+$fileRelative = str_replace(APPLICATION_PATH, "", $file);
+
 
 $template = str_replace("{{replace_full_filename}}", $file, $template);
 
@@ -49,7 +53,7 @@ $tokens = array();
 $tokensFound = array();
 $allowedLangs = explode(",",ALLOWED_LANGS);
 $totLangs = count($allowedLangs);
-$group = Tau::tau_get_group($file);
+$group = Tau::tau_get_group($fileRelative);
 $myMatches = "";
 $formTable = "<table><thead><tr><th></th>";
 
@@ -78,13 +82,13 @@ foreach($matches as $match){
     foreach($match as $coincidence){
         
         $formTable .= "<tr>";
-        $tokens[$coincidence] = Tau::tau_tokenizer($file, $coincidence);
+        $tokens[$coincidence] = Tau::tau_tokenizer($fileRelative, $coincidence);
         $formTable .= "<td>" . $tokens[$coincidence] . "</td>";
         $text_id = 0;
         foreach($allowedLangs as $lang){
             $text_id++;
             $class=" newField";
-            $currentContent = $tokensFound[$lang][$tokens[$coincidence]];
+            @$currentContent = $tokensFound[$lang][$tokens[$coincidence]];
             if($currentContent){
                $class = " notNewField"; 
             }

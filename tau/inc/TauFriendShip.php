@@ -1,5 +1,4 @@
 <?php
-session_start();
 /**
  * 
  * @abstract Handles all friendship issues
@@ -48,7 +47,7 @@ class TauFriendShip{
             $_SESSION['last_error'] = "FATAL ERROR: id_user SESSION variable is not set when creating LuFriendShip object";
             header("Location: /error/");
         }*/
-        $this->logged_user_id = (isset($_SESSION['id_user']))?$_SESSION['id_user']:0;
+        $this->logged_user_id = (TauSession::get('id_user'))?TauSession::get('id_user'):0;
         
     }
 

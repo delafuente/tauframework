@@ -9,7 +9,7 @@
  * @copyright (c) Lucas de la Fuente <lucasdelafuente1978@gmail.com>
  * @license https://github.com/delafuente/tauframework/blob/master/LICENSE The MIT License (MIT)
  */
-define('__ROOT__', str_replace("\\","/",dirname(dirname(__FILE__))) );
+//define('__ROOT__', str_replace("\\","/",dirname(dirname(__FILE__))) );
 
 require_once(__ROOT__ . "/tau/inc/config.php");
 require_once(__ROOT__ . "/tau/inc/DataManager.php");

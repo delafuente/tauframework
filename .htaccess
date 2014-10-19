@@ -7,6 +7,19 @@ Options -Indexes
 
 ServerSignature Off
 
+ErrorDocument 404 /index.php?request=404
+
+RewriteCond %{REQUEST_URI} !(js|css|imagesu)
+RewriteCond %{REQUEST_URI} !(\.css|\.js|\.png|\.jpg|\.jpeg|\.gif|\.ico|\.font|\.ttf|robots\.txt)$ [NC]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_URI} !^/imagesu
+RewriteRule . index.php
+#RewriteRule ^(.*)$ index.php?request=$1 [L,QSA]
+
+#RewriteCond %{REQUEST_URI} !\..+$
+#RewriteCond %{REQUEST_URI} !/$
+
 #Remove always trailing slash. The next rule is the opposite
 #RewriteRule ^(.*)/$ $1 [R=301,L]
 
@@ -39,16 +52,16 @@ ServerSignature Off
 #   # If you've other scripting languages, disable them too.
 #</Directory>
 
-RewriteRule ^[a-z]{2}/$ index.php?lang=$1 [NC,L]
+#RewriteRule ^[a-z]{2}/$ index.php?lang=$1 [NC,L]
 
 #Redirect php files, and do other parse ( not L clause )
-RewriteRule ^[a-z]{2}/(.*\.php)$ $1/$2/ [NC]
+#RewriteRule ^[a-z]{2}/(.*\.php)$ $1/$2/ [NC]
 
 #Redirect not matched like a folder, and do other parse ( not L clause )
-RewriteRule ^[a-z]{2}/(.*)$ $1/$2/
+#RewriteRule ^[a-z]{2}/(.*)$ $1/$2/
 
 #Redirect all es/name folders to php files counterpart, es/name -> /name.php?lang=es
-RewriteRule ^[a-z]{2}/(.*)/(.*)$ $2.php$3 [NC,L]
+#RewriteRule ^[a-z]{2}/(.*)/(.*)$ $2.php$3 [NC,L]
 
 
 

@@ -1,12 +1,12 @@
 <?php
-
+session_start();
 /**
  * 
- * @abstract tau
+ * @abstract tau Single Entry Point
  * @author Lucas de la Fuente
  * @project tau
  * @encoding UTF-8
- * @date 05-jul-2014
+ * @date 17-oct-2014
  * @copyright (c) Lucas de la Fuente <lucasdelafuente1978@gmail.com>
  * @license https://github.com/delafuente/tauframework/blob/master/LICENSE The MIT License (MIT)
  */
@@ -17,49 +17,45 @@ require_once( __ROOT__ . "/tau/inc/config.php");
 require_once( __ROOT__ . "/tau/inc/PageRender.php");
 require_once( __ROOT__ . "/tau/Tau.php" );
 require_once( __ROOT__ . "/tau/inc/DataManager.php");
+require_once( __ROOT__ . "/tau/inc/InputValidator.php");
+require_once( __ROOT__ . "/tau/inc/LanguageLoader.php");
+require_once( __ROOT__ . "/tau/inc/LogFile.php");
+require_once( __ROOT__ . "/tau/inc/TauFriendship.php");
+require_once( __ROOT__ . "/tau/inc/elements/TauForm.php");
+require_once( __ROOT__ . "/tau/inc/framework/TauURI.php");
+require_once( __ROOT__ . "/tau/inc/framework/TauMessages.php");
+require_once( __ROOT__ . "/tau/inc/framework/TauSession.php");
 
-$tau = Tau::getInstance();
+//ToDo: Make InputValidator fully static
 
-echo "<h3>" . Tau::getTauGreek() . " Framework working: </h3><br/>";
+//This array will be passed through all process, until the controller,
+//So you can stablish something here, and read it in the controller.
+$tauContext = array();
+$tauContext['help'] = 'This array will be passed to the final controller';
 
-echo "<p>Current environment: " . $tau->getEnvironment() . "</p>";
+TauURI::parseURI();
+TauRequest::init(TauURI::$url, TauURI::$parameters);
 
-$all_constants = get_defined_constants(true);
-//print_r($all_constants);
+TauMessages::addMessage("total url parts: ". TauURI::$urlPartsCount, 'notice', 'index');
+TauMessages::addNotice("total url parameters: ". TauURI::$parametersCount, 'index');
 
-$db1 = DataManager::getInstance();
+//Sending headers and cookies here, to not break the execution order
+TauResponse::sendHeadersAndCookies();
 
-echo "<p>db1 name: " . $db1->getDataBaseName() . "</p>";
-echo "<code>db1: " . $db1->getVar("select text from breaking_news limit 1;") . "</code>";
+//Here you have a chance to alter the controller output,
+//and represents the last output of the application ( unless debug logging )
+echo TauRouter::route($urlMap, $tauContext);
 
-$db2 = DataManager::getInstance("scheme");
-echo "<p>db2 name: " . $db2->getDataBaseName() . "</p>";
-echo "<code>db2: " . $db2->getVar("select twitter from customers limit 1;") . "</code>";
+if(VERBOSE_MODE){
+    echo TauMessages::getAllMessagesHtml();
+}
 
-echo "<p>db1 name: " . $db1->getDataBaseName() . "</p>";
-
-$db3 = DataManager::getInstance();
-echo "<h4> After db3 = DataManager::getInstance()</h4>";
-
-echo "<p>db3 name: " . $db3->getDataBaseName() . "</p>";
-echo "<code>db3: " . $db3->getVar("select text from breaking_news limit 1;") . "</code>";
-
-echo "<p>db1 name: " . $db1->getDataBaseName() . "</p>";
-echo "<code>db1: " . $db1->getVar("select text from breaking_news limit 1;") . "</code>";
-
-
-echo "<p>db2 name: " . $db2->getDataBaseName() . "</p>";
-echo "<code>db2: " . $db2->getVar("select twitter from customers limit 1;") . "</code>";
-
-
-$oRender = new PageRender('es', 'es_ES');
-
-$oRender->toString();
-//echo "<br/>". __LINE__ . " here " . time() . " <br/>";
-//$db1->close();
-//$db2->close();
-//$db3->close();
-
-echo "<hr/>";
-echo "<p>Powered by " . Tau::getTauFrameworkGreek() . ".</p>";
+function __autoload($class){
+    global $autoloadPaths;
+    $inc = false;
+    require_once(__ROOT__ . '/tau/inc/framework/TauAutoload.php');
+    $inc = new TauAutoload($class, $autoloadPaths);
+}
 ?>
+
+

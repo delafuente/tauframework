@@ -54,7 +54,7 @@ class Replacer {
             $item = $line['item'];
             $text = $line['content'];
 
-            if ($_SESSION['vanilla']) {
+            if (TauSession::get('vanilla')) {
                 $this->addFilter(trim($item), "%%" . trim($item) . "%%");
             } else {
                 $this->addFilter(trim($item), trim($text));
