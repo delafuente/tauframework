@@ -7,13 +7,15 @@ var languageCompleter = (function($, undefined){
         var inputList = "";
         var formData = [];
         var resto = "";
+        var hideButton = false;
         $(".inputs").each(function(){
             var isNew = true;
             if($(this).val() != ""){
                 if( $(this).hasClass("notNewField") ){
                     isNew = false;
                 }
-                inputList += " - " + $(this).attr("name") + " - " + $(this).attr("id") + " isNew: " + isNew + " : " + $(this).val();
+                //inputList += " - " + $(this).attr("name") + " - " + $(this).attr("id") + " isNew: " + isNew + " : " + $(this).val();
+                //alert(inputList);
                 formData[formData.length] = {
                     name: $(this).attr("name"), 
                     isNew : isNew, 
@@ -31,6 +33,7 @@ var languageCompleter = (function($, undefined){
             formData[formData.length] = { name: "create_sql", isNew : true, content: "on"  };  
         }
         if($("#execute_sql").is(":checked")){ 
+            hideButton = true;
             formData[formData.length] = { name: "execute_sql", isNew : true, content: "on"  };  
         }
         var filepath = $("input#filepath").val();
@@ -67,7 +70,10 @@ var languageCompleter = (function($, undefined){
                        $("#received_sql").append("<p class='constant'>" + sql[theQuery] + "</p>");
                    }
                }
-               $('input[name=btnSubmit]').hide();
+               if(hideButton){
+                   $('input[name=btnSubmit]').hide();
+               }
+               
             },
             failure: function(errMsg) {
                console.error("error:",errMsg);

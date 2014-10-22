@@ -14,6 +14,7 @@ RewriteCond %{REQUEST_URI} !(\.css|\.js|\.png|\.jpg|\.jpeg|\.gif|\.ico|\.font|\.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_URI} !^/imagesu
+RewriteCond %{REQUEST_URI} !^/tau/
 RewriteRule . index.php
 #RewriteRule ^(.*)$ index.php?request=$1 [L,QSA]
 
