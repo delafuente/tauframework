@@ -39,11 +39,11 @@ $all_constants = get_defined_constants(true);
 $db1 = DataManager::getInstance();
 
 echo "<p>db1 name: " . $db1->getDataBaseName() . "</p>";
-echo "<code>db1: " . $db1->getVar("select text from breaking_news limit 1;") . "</code>";
+echo "<code>db1: " . $db1->getVar("select content from tau_translations where lang='es' and item='LU_NUM_REGISTERS_FOUND' limit 1;") . "</code>";
 
-$db2 = DataManager::getInstance("scheme");
+$db2 = DataManager::getInstance("test_sampleapp");
 echo "<p>db2 name: " . $db2->getDataBaseName() . "</p>";
-echo "<code>db2: " . $db2->getVar("select twitter from customers limit 1;") . "</code>";
+echo "<code>db2: " . $db2->getVar("select content from tau_translations where lang='es' and item='LU_INIT_SESSION' limit 1;;") . "</code>";
 
 echo "<p>db1 name: " . $db1->getDataBaseName() . "</p>";
 
@@ -51,14 +51,14 @@ $db3 = DataManager::getInstance();
 echo "<h4> After db3 = DataManager::getInstance()</h4>";
 
 echo "<p>db3 name: " . $db3->getDataBaseName() . "</p>";
-echo "<code>db3: " . $db3->getVar("select text from breaking_news limit 1;") . "</code>";
+echo "<code>db3: " . $db3->getVar("select content from tau_translations where lang='es' and item='LU_FORGOT_PASS' limit 1;") . "</code>";
 
 echo "<p>db1 name: " . $db1->getDataBaseName() . "</p>";
-echo "<code>db1: " . $db1->getVar("select text from breaking_news limit 1;") . "</code>";
+echo "<code>db1: " . $db1->getVar("select content from tau_translations where lang='en' and item='LU_NUM_REGISTERS_FOUND' limit 1;") . "</code>";
 
 
 echo "<p>db2 name: " . $db2->getDataBaseName() . "</p>";
-echo "<code>db2: " . $db2->getVar("select twitter from customers limit 1;") . "</code>";
+echo "<code>db2: " . $db2->getVar("select content from tau_translations where lang='en' and item='LU_NUM_REGISTERS_FOUND' limit 1;") . "</code>";
 
 
 $oRender = new PageRender('es', 'es_ES');

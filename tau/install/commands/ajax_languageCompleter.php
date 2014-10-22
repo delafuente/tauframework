@@ -14,9 +14,11 @@ session_start();
 define('__ROOT__', str_replace("\\", "/", dirname(dirname(__FILE__))));
 
 require_once( __ROOT__ . "/../../tau/inc/config.php");
+
 require_once( __ROOT__ . "/../../tau/inc/InputValidator.php");
 require_once( __ROOT__ . "/../../tau/Tau.php" );
 require_once( __ROOT__ . "/../../tau/inc/DataManager.php");
+require_once( __ROOT__ . "/../../tau/inc/framework/TauResponse.php");
 
 if (APPLICATION_ENVIRONMENT != 'local') {
     echo '<p>Cannot access this file</p>';
@@ -70,6 +72,10 @@ foreach ($inputs as $input) {
         $isNew = $input['isNew'];
         $content = $input['content'];
         
+        if(!isset($_SESSION['tokensFound'][$lang][$name])){
+            $_SESSION['tokensFound'][$lang][$name]="";
+        }
+        
         //Check only new or changed content is updated
         if ($_SESSION['tokensFound'][$lang][$name] != $content) {
             if ($isNew) {
@@ -118,8 +124,9 @@ if ($create_sql) {
     $operations['create_sql'] = array("not_required");
 }
 
-if($needToSave){
+if($needToSave && defined('SAVE_GENERATED_SQL_FOLDER') && strlen(SAVE_GENERATED_SQL_FOLDER) > 3){
     
+   
     $fileToWriteOn = SAVE_GENERATED_SQL_FOLDER . "/" . Tau::tau_get_group($full_filename) . "_" . time() . ".sql";
     
     $saveSQL = "-- TauFramework auto-generated sql to modify translations \n";
@@ -128,8 +135,13 @@ if($needToSave){
     foreach ($mainSQLArray as $sqlSentence){
         $saveSQL .= $sqlSentence . "\n";
     }
+    if(!is_writable(SAVE_GENERATED_SQL_FOLDER)){
+        @chmod(SAVE_GENERATED_SQL_FOLDER, 777);
+    }
+    if(file_exists(SAVE_GENERATED_SQL_FOLDER) && is_writable(SAVE_GENERATED_SQL_FOLDER)){
+        file_put_contents($fileToWriteOn,$saveSQL);
+    }
     
-    file_put_contents($fileToWriteOn,$saveSQL);
 }
 
 if ($replace_in_local) {

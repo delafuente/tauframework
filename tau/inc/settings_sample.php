@@ -35,6 +35,8 @@ if (PRODUCTION_ENVIRONMENT) {
     define('APPLICATION_PATH', '/path/to/your/app'); //radix
     define('WEB_PATH', '/path/to/your/web'); //your web
     define('APPLICATION_BASE_URL', PROTOCOL . 'myapp.com');
+    define('SAVE_GENERATED_SQL_FOLDER', '/path/to/your/app/sql');
+    define('TAU_BASE_URL', PROTOCOL . 'localhost.tau');
     define('TAU_UPLOADS_PATH ', "/path/to/your/app/uploads/"); //where to store user uploads
     define('DEBUG_MODE', false); //Set false for no logging
     define('VERBOSE_MODE', false);
@@ -53,6 +55,8 @@ if (PRODUCTION_ENVIRONMENT) {
     define('APPLICATION_PATH', '/path/to/your/app'); //radix
     define('WEB_PATH', '/path/to/your/web'); //your web
     define('APPLICATION_BASE_URL', PROTOCOL . 'myapp.com');
+    define('SAVE_GENERATED_SQL_FOLDER', '/path/to/your/app/sql');
+    define('TAU_BASE_URL', PROTOCOL . 'localhost.tau');
     define('TAU_UPLOADS_PATH ', "/path/to/your/app/uploads/"); //where to store user uploads
     define('DEBUG_MODE', false); //Set false for no logging
     define('VERBOSE_MODE', false);
@@ -75,6 +79,8 @@ if (PRODUCTION_ENVIRONMENT) {
     define('WEB_PATH', '/path/to/your/web'); //your web
 
     define('APPLICATION_BASE_URL', PROTOCOL . 'localhost_url');
+    define('SAVE_GENERATED_SQL_FOLDER', '/path/to/your/app/sql');
+    define('TAU_BASE_URL', PROTOCOL . 'localhost_url_of_tau');
     define('TAU_UPLOADS_PATH ', "/path/to/your/app/uploads/"); //where to store user uploads
     define('DEBUG_MODE', true); //Set false for no logging
     define('VERBOSE_MODE', true);

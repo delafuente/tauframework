@@ -30,8 +30,8 @@ class Tau {
                 $this->environment = 'pro';
         }
 
-        if (isset($_COOKIE['lang'])) {
-            $this->lang = $_COOKIE['lang'];
+        if (TauResponse::getCookie('lang')) {
+            $this->lang = TauResponse::getCookie('lang');
         } else {
             $this->lang = DEFAULT_LANG_ABBR;
             TauResponse::setCookie('lang', DEFAULT_LANG_ABBR, time() + SECONDS_ONE_MONTH, APPLICATION_BASE_URL);

@@ -60,6 +60,15 @@ $formTable = "<table><thead><tr><th></th>";
 if($totLangs < 1 || ALLOWED_LANGS == ""){
     $template = str_replace("{{replace_content}}", "<p class='red'>You have no allowed langs in settings.php ALLOWED_LANGS constant</p>", $template);
     $template = str_replace("{{replace_footer}}", "Powered by " . Tau::getTauFrameworkGreek(), $template);
+    echo $template;
+    die();
+}
+
+if(count($matches[0]) < 1){
+    $template = str_replace("{{replace_content}}", "<p class='red'>Nothing to replace in this file. Lang replacements are between {{ and }} signs</p>", $template);
+    $template = str_replace("{{replace_footer}}", "Powered by " . Tau::getTauFrameworkGreek(), $template);
+    echo $template;
+    die();
 }
 
 foreach($allowedLangs as $lang){
@@ -78,7 +87,7 @@ foreach($currentTranslations as $key => $trans){
 $_SESSION['tokensFound'] = $tokensFound;
 
 foreach($matches as $match){
-   // echo "<p>Reading match $match<br/>";
+   
     foreach($match as $coincidence){
         
         $formTable .= "<tr>";
