@@ -32,14 +32,29 @@ class TauResponse {
     }
 
     public static function sendHeadersAndCookies() {
-        if (!headers_sent()) {
+        $fileToBlame = "";
+        $lineToBlame = "";
+        
+        if (!headers_sent($fileToBlame, $lineToBlame)) {
             foreach (self::$headers as $header) {
+                TauMessages::addNotice("Sending header: $header", "TauResponse::sendHeadersAndCookies()");
                 header($header, true);
             }
             foreach(self::$cookies as $cookie){
-                @list($name, $value, $expire, $path, $domain, $secure, $httponly) = $cookie;
+                //list($name, $value, $expire, $path, $domain, $secure, $httponly) = $cookie;
+                $name = (isset($cookie['name']))?$cookie['name']:'';
+                $value = (isset($cookie['value']))?$cookie['value']:'';
+                $expire = (isset($cookie['expire']))?$cookie['expire']:'0';
+                $path = (isset($cookie['path']))?$cookie['path']:'';
+                $domain = (isset($cookie['domain']))?$cookie['domain']:'';
+                $secure = (isset($cookie['secure']))?$cookie['secure']:false;
+                $httponly = (isset($cookie['httponly']))?$cookie['httponly']:false;
+                $diff = $expire - time();
+                TauMessages::addWarning("About to send cookie (expiring in $diff seconds):" . print_r($cookie, true), "TauResponse::sendHeadersAndCookies()");
                 setcookie($name, $value, $expire, $path, $domain, $secure, $httponly);
             }
+        }else{
+            TauMessages::addError("Headers already sent on $fileToBlame, in line $lineToBlame", "TauResponse::sendHeadersAndCookies()");
         }
     }
     
@@ -54,7 +69,7 @@ class TauResponse {
     
     public static function setCookie($name, $value ="", $expire = 0, $path = "", $domain ="", $secure = false, $httponly = false){
         
-        self::$cookies[] = array(
+        $res = self::$cookies[] = array(
             'name' => $name,
             'value' => $value,
             'expire' => $expire,
@@ -63,6 +78,12 @@ class TauResponse {
             'secure' => $secure,
             'httponly' => $httponly
         );
+        if($res !== false){
+            TauMessages::addNotice("Added Cookie: " . print_r(self::$cookies[count(self::$cookies) -1],true), "TauResponse::setCookie()");
+        }else{
+            TauMessages::addError("Error trying to save Cookie: " . print_r(self::$cookies[count(self::$cookies) -1],true), "TauResponse::setCookie()");
+        }
+        
     }
 
 }
