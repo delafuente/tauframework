@@ -29,12 +29,18 @@ class Tau {
             default:
                 $this->environment = 'pro';
         }
-
-        if (TauResponse::getCookie('lang')) {
+        
+        if (TauURI::$langOnURI) {
+            $this->lang = TauURI::$langOnURI;
+            TauMessages::addNotice("LANG taken from URI: $this->lang", "Tau::__construct()");
+            TauResponse::setCookie('lang', TauURI::$langOnURI, time() + SECONDS_ONE_YEAR, "/");
+        } else if (TauResponse::getCookie('lang')) {
             $this->lang = TauResponse::getCookie('lang');
+            TauMessages::addNotice("LANG taken from COOKIE: $this->lang", "Tau::__construct()");
         } else {
             $this->lang = DEFAULT_LANG_ABBR;
-            TauResponse::setCookie('lang', DEFAULT_LANG_ABBR, time() + SECONDS_ONE_MONTH, APPLICATION_BASE_URL);
+            TauMessages::addNotice("LANG taken from DEFAULT_LANG_ABBR: $this->lang", "Tau::__construct()");
+            TauResponse::setCookie('lang', DEFAULT_LANG_ABBR, time() + SECONDS_ONE_YEAR, "/");
         }
     }
 
@@ -77,9 +83,11 @@ class Tau {
     public function hookBeforeRender() {
         
     }
+
     public function hookAfterRender() {
         Tau::closeAllDbConnections();
     }
+
     public function hookBeforeInit() {
         
     }

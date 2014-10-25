@@ -22,7 +22,7 @@ class TauDispatcher {
         
         ob_start();
         extract($params);
-        echo "<p>INCLUDING: " .WEB_PATH . "/" .$path ."</p>";
+        TauMessages::addNotice("INCLUDING: " .WEB_PATH  .$path , "TauDispatcher::executeDispatch)");
         include(WEB_PATH ."/". $path);
         $result = ob_get_contents();
         ob_end_clean();

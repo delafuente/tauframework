@@ -7,7 +7,18 @@ Options -Indexes
 
 ServerSignature Off
 
-ErrorDocument 404 /index.php?request=404
+#RewriteCond %{REQUEST_FILENAME} !-f
+#RewriteRule ^(.*[^/])$ $1/ [L,R=301]
+
+
+
+#Add trailing slash to folders
+#RewriteCond %{REQUEST_FILENAME} !-f
+#RewriteCond %{REQUEST_URI} !\..+$
+#RewriteCond %{REQUEST_URI} !/$
+#RewriteRule (.*) http://%{HTTP_HOST}/$1/ [L,R=301]
+
+#ErrorDocument 404 /404/
 
 RewriteCond %{REQUEST_URI} !(js|css|imagesu)
 RewriteCond %{REQUEST_URI} !(\.css|\.js|\.png|\.jpg|\.jpeg|\.gif|\.ico|\.font|\.ttf|robots\.txt)$ [NC]

@@ -16,6 +16,7 @@ class TauURI {
     public static $urlPartsCount;
     public static $parameters;
     public static $parametersCount;
+    public static $langOnURI = false;
     
     public static function parseURI(){
         
@@ -30,10 +31,8 @@ class TauURI {
         self::$urlPartsCount = count($urlParts);
         self::$parametersCount = count($parameters);
         
-        echo "url parts: " . print_r($urlParts, true);
-        echo "<br/><br/>";
-        //GUARDAR EN OBJETO REQUEST, o en ROUTER estos parametros, o en sesión
-        echo "parameters: " . print_r($parameters, true);
+        TauMessages::addNotice("url parts: " . print_r($urlParts, true), "TauURI::parseURI()");
+        TauMessages::addNotice("parameters: " . print_r($parameters, true), "TauURI::parseURI()"); 
     }
     
     protected static function getParameters($string){
@@ -62,6 +61,7 @@ class TauURI {
        
         $urlParts = false;
         $parameters = array();
+        $allowedLangs = explode(",", ALLOWED_LANGS);
         
         if(strpos($request, "?") !== false){
             
@@ -70,11 +70,19 @@ class TauURI {
             $requestParts[0] = trim($requestParts[0], "/");
             $requestParts[0] = self::sanitizeUrl($requestParts[0]);
             $urlParts = explode("/",$requestParts[0]);
+            
+            if( in_array($urlParts[1], $allowedLangs) ){
+                self::$langOnURI = $urlParts[1];
+            }
             return array('urlParts' => $urlParts, 'parameters' => $parameters);
             
         }else{
             
             $urlParts = explode("/",$request);
+            
+            if( in_array($urlParts[1], $allowedLangs) ){
+                self::$langOnURI = $urlParts[1];
+            }
             return array('urlParts' => $urlParts, 'parameters' => false);
         }
         

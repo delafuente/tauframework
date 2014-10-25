@@ -35,6 +35,7 @@ class TauMessages {
             case 'notice': $style = self::$notice; break;                
             case 'warning': $style = self::$warning; break;
             case 'error': $style = self::$error; break;
+            default: $style = $type; break;
         }
         
             $pre = "<p class='tau_$type' style='color:$style'>";

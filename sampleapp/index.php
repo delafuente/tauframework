@@ -25,7 +25,7 @@ require_once( __ROOT__ . "/tau/inc/elements/TauForm.php");
 require_once( __ROOT__ . "/tau/inc/framework/TauURI.php");
 require_once( __ROOT__ . "/tau/inc/framework/TauMessages.php");
 require_once( __ROOT__ . "/tau/inc/framework/TauSession.php");
-
+require_once( WEB_PATH . "/routes/general.php");
 //ToDo: Make InputValidator fully static
 
 //This array will be passed through all process, until the controller,
@@ -34,19 +34,25 @@ $tauContext = array();
 $tauContext['help'] = 'This array will be passed to the final controller';
 
 TauURI::parseURI();
-TauRequest::init(TauURI::$url, TauURI::$parameters);
+TauRequest::init(TauURI::$url, (TauURI::$parameters)? TauURI::$parameters : array());
 
 TauMessages::addMessage("total url parts: ". TauURI::$urlPartsCount, 'notice', 'index');
 TauMessages::addNotice("total url parameters: ". TauURI::$parametersCount, 'index');
 
-//Sending headers and cookies here, to not break the execution order
-TauResponse::sendHeadersAndCookies();
+
 
 //Here you have a chance to alter the controller output,
 //and represents the last output of the application ( unless debug logging )
-echo TauRouter::route($urlMap, $tauContext);
+$output = TauRouter::route($urlMap, $tauContext);
+
+//Sending headers and cookies here, to not break the execution order
+TauResponse::sendHeadersAndCookies();
+
+//Finally, echoing the page
+echo $output; 
 
 if(VERBOSE_MODE){
+    TauMessages::addNotice("MAX MEM: " . round(memory_get_peak_usage(true)/1024,0) . " KB ", "indexFrontController");
     echo TauMessages::getAllMessagesHtml();
 }
 
