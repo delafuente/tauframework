@@ -10,6 +10,10 @@
  * @copyright (c) Lucas de la Fuente <lucasdelafuente1978@gmail.com>
  * @license https://github.com/delafuente/tauframework/blob/master/LICENSE The MIT License (MIT)
  */
+require_once( "inc/framework/TauURI.php" );
+require_once( "inc/framework/TauResponse.php" );
+require_once( "inc/framework/TauMessages.php" );
+
 class Tau {
 
     protected $environment;
