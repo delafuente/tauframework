@@ -20,8 +20,11 @@
 <body><div class="main">
 <?php
 
-require_once( "/tau/Tau.php" );
-require_once( "/tau/inc/config.php" );
+require_once( "./tau/Tau.php" );
+require_once( "./tau/inc/framework/TauURI.php" );
+require_once( "./tau/inc/framework/TauResponse.php" );
+require_once( "./tau/inc/framework/TauMessages.php" );
+require_once( "./tau/inc/config.php" );
 
 if(APPLICATION_ENVIRONMENT != 'local'){
     echo '<p>Cannot access this file</p>';
