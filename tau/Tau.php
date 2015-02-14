@@ -137,7 +137,7 @@ class Tau {
 
     public static function tau_tokenizer($full_file_path, $token) {
 
-        $ff = $full_file_path;
+        $ff = str_replace(APPLICATION_PATH, "", $full_file_path);
         $token = substr($token, 2, strlen($token) - 4);
 
         $sha1 = substr(sha1($ff), 0, 7);
