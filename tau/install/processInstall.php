@@ -20,6 +20,8 @@ require_once( __ROOT__ . "/../tau/install/TauInstall.php");
 require_once( __ROOT__ . "/../tau/inc/InputValidator.php");
 require_once( __ROOT__ . "/../tau/inc/LogFile.php");
 require_once( __ROOT__ . "/../tau/inc/framework/TauResponse.php");
+require_once( __ROOT__ . "/../tau/inc/framework/TauRequest.php");
+require_once( __ROOT__ . "/../tau/inc/framework/TauSession.php");
 
 $tau = Tau::getInstance();
 $tauInstall = new TauInstall();

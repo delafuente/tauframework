@@ -8,6 +8,18 @@
  * @copyright Lucas de la Fuente <lucasdelafuente1978@gmail.com>
  * @license https://github.com/delafuente/tauframework/blob/master/LICENSE The MIT License (MIT)
  */
+define('__ROOT__', str_replace("\\", "/", dirname(dirname(__FILE__))));
+
+require_once( __ROOT__ . "/../tau/inc/config.php");
+require_once( __ROOT__ . "/../tau/Tau.php" );
+require_once( __ROOT__ . "/../tau/inc/DataManager.php");
+
+require_once( __ROOT__ . "/../tau/install/TauInstall.php");
+require_once( __ROOT__ . "/../tau/inc/InputValidator.php");
+require_once( __ROOT__ . "/../tau/inc/LogFile.php");
+require_once( __ROOT__ . "/../tau/inc/framework/TauResponse.php");
+require_once( __ROOT__ . "/../tau/inc/framework/TauRequest.php");
+require_once( __ROOT__ . "/../tau/inc/framework/TauSession.php");
 
 if (APPLICATION_INSTALLED || file_exists("app_installed")) {
     echo "<p class='red'>Application yet installed.</p>";
