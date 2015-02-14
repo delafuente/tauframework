@@ -55,9 +55,9 @@ class Replacer {
             $text = $line['content'];
 
             if (TauSession::get('vanilla')) {
-                $this->addFilter(trim($item), "%%" . trim($item) . "%%");
+                $this->addFilter(trim("{{".$item."}}"), "%%" . trim($item) . "%%");
             } else {
-                $this->addFilter(trim($item), trim($text));
+                $this->addFilter(trim("{{".$item."}}"), trim($text));
             }
 
             $tanslations[$item] = $text;

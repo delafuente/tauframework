@@ -72,11 +72,12 @@ class LanguageLoader {
                 $text = str_replace("replace_ff_lang",$language,$text);
 
             }
-                if( TauSession::get('vanilla') && $parseVanilla ){
-                    $translations[$item] = "%%" . $item . "%%";
-                }else{
-                    $translations[$item] = $text;
-                }
+            
+            if( TauSession::get('vanilla') && $parseVanilla ){
+                $translations[] = array( 'item' => $item, 'content' => "%%" . $item . "%%");
+            }else{
+                $translations[] = array( 'item' => $item, 'content' => $text);
+            }
         }
              
             return $translations;
