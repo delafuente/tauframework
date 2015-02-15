@@ -255,8 +255,11 @@ class PageRender {
         
         $js_validation = LanguageLoader::getInstance()->getTranslations("js_validation", APPLICATION_BASE_URL, $this->lang);
         $validation_text = "var tau_validation = new Array();\n";
-        foreach ($js_validation as $js_key => $js_val){
-            $validation_text .= "tau_validation['$js_key'] = \"$js_val\";\n";
+        
+        foreach ($js_validation as $elem){
+                $js_key = $elem['item'];
+                $js_val = $elem['content'];
+                $validation_text .= "tau_validation['$js_key'] = \"$js_val\";\n";
         }
         //Constants
         $constants = "const APP_BASE_URL='" . APPLICATION_BASE_URL . "';\n";
