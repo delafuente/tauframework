@@ -53,6 +53,8 @@ class InputValidator {
         $this->languageLoader = LanguageLoader::getInstance();
         $labels = $this->languageLoader->getTranslations('lang_labels', APPLICATION_BASE_URL, Tau::getInstance()->getLang());
         
+        foreach($labels as $elem){ $inputArray[$elem['item']] = $elem['content']; }
+        
         $inputArray = $this->db->escape($inputArray);
 
         /* Check the form is not posted twice */
