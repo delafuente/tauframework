@@ -14,8 +14,7 @@ var languageCompleter = (function($, undefined){
                 if( $(this).hasClass("notNewField") ){
                     isNew = false;
                 }
-                //inputList += " - " + $(this).attr("name") + " - " + $(this).attr("id") + " isNew: " + isNew + " : " + $(this).val();
-                //alert(inputList);
+                
                 formData[formData.length] = {
                     name: $(this).attr("name"), 
                     isNew : isNew, 

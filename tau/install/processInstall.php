@@ -29,6 +29,8 @@ $modules = array(); //array with selected modules
 
 ?>
 <link rel="stylesheet" type="text/css" href="install.css">
+<link rel="icon" type="image/png" href="/tau32g.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/tau64g.png" sizes="64x64">
 <div class="main">
 <?php
 
@@ -101,6 +103,9 @@ if (count($existingTables) > 0) {
     
     if ($db->makeQuery($dataQuery) !== false) {
         echo "<p class='success'>Data insertion OK !</p>";
+        file_put_contents(__ROOT__ . "/../tau/install/app_installed", 
+                date("Y-m-d H:i:s", time()) .
+                "\n\nDelete this file if you want to run the installation again.");
     } else {
         echo "<p class='red'>Error inserting data : </p>";
         echo $db->getLastErrorMessage();

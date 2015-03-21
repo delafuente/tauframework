@@ -14,6 +14,8 @@
 ?>
 <html>
     <head>
+        <link rel="icon" type="image/png" href="/tau32g.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="/tau64g.png" sizes="64x64">
         <title>Tau Framework</title>
         
     </head>
@@ -48,6 +50,7 @@
     <h4>From here, you can:</h4>
     <a href="install/">Install the application</a>
     <a href="install/commands/lang.php">Edit template translations with Tau Language Tool</a>
+    <a href="install/commands/migration/migrate.php">Execute pending migrates</a>
 </div>
 </body>
 </html>

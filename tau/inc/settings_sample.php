@@ -43,6 +43,8 @@ if (PRODUCTION_ENVIRONMENT) {
     define('BENCH_MODE', false); // Database benchmarck logging
     define('LU_COOKIE_PATH', '/');
     define('LU_COOKIE_DOMAIN', 'myapp.com');
+    define('MIGRATES_FOLDER', WEB_PATH . "/migrates");
+    define('USE_TAU_CACHE', true);
     
 } else if (DEVELOPMENT_ENVIRONMENT) {
 
@@ -63,6 +65,8 @@ if (PRODUCTION_ENVIRONMENT) {
     define('BENCH_MODE', false); // Database benchmarck logging
     define('LU_COOKIE_PATH', '/');
     define('LU_COOKIE_DOMAIN', 'myapp.com');
+    define('MIGRATES_FOLDER', WEB_PATH . "/migrates");
+    define('USE_TAU_CACHE', true);
     
 } else if (LOCAL_WITH_LOCALHOST) {
 
@@ -87,6 +91,8 @@ if (PRODUCTION_ENVIRONMENT) {
     define('BENCH_MODE', false); // Database benchmarck logging
     define('LU_COOKIE_PATH', "/");
     define('LU_COOKIE_DOMAIN', false);
+    define('MIGRATES_FOLDER', WEB_PATH . "/migrates");
+    define('USE_TAU_CACHE', false);
 
 } else if (LOCAL_WITH_LAN_ACCESS) {
     //Add here special configuration for local with LAN
@@ -94,14 +100,24 @@ if (PRODUCTION_ENVIRONMENT) {
     die("<p>settings error: CONSTANTS ERROR IN config.php, PRODUCTION" .
             "_ENVIRONMENT or ONE LOCAL_WITH_* constant must be set to true</p>");
 }
-
+if(DEBUG_MODE){
+    ini_set('display_errors', true);
+}else{
+    ini_set('display_errors', false);
+}
 //Data that (normally) remains unchanged in every environment
 $autoloadPaths = array(
   APPLICATION_PATH . "/tau/inc",
     APPLICATION_PATH . "/tau/inc/framework",
     WEB_PATH . "/tau/inc/modules"
 );
-
+/** Field span error class */
+define('SPAN_ERROR_CLASS', 'spanError');
+/** Field error class */
+define('FIELD_ERROR_CLASS', 'fieldError' );
+/** Migrates split characters, for each sql sentence */
+define('SQL_SPLIT', '-- &|6.28@tau&');
+define('CACHE_PATH', WEB_PATH . "/cache");
 /** Database Charset to use in creating database tables. */
 define('DB_CHARSET', 'utf8');
 /** The Database Collate type. Don't change this if in doubt. */
@@ -179,6 +195,6 @@ define('MAX_FRIENDS_ON_SIDEBAR', 30); //If you show a list of friends, this is t
 /* Recaptcha config, if you want to use into application, it's integrated with forms */
 define('RECAPTCHA_PUBLIC_KEY', 'your public key');
 define('RECAPTCHA_PRIVATE_KEY', 'your private key');
-define('CACHE_SECONDS_LIFETIME',10);
+define('CACHE_SECONDS_LIFETIME',3600);
 define('ALLOW_FORM_DATA_REFRESH',true);
 ?>

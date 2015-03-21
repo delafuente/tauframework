@@ -16,9 +16,9 @@
     {{replace_content}}
     
     
-    <input type="checkbox" id="replace_in_local" name="replace_in_local" /> <label for="replace_in_local"> Replace in local file: Will write the changes in the file</label> <br/>
-    <input type="checkbox" id="create_sql"  name="create_sql" /> <label for="create_sql"> Create SQL : Will create the required SQL to save this modifications in any db</label> <br/>
-    <input type="checkbox" id="execute_sql" name="execute_sql" /> <label for="execute_sql"> Save into current database : Will execute previous SQL into current database.</label> <br/>
+    <input type="checkbox" id="replace_in_local" name="replace_in_local" checked="checked" /> <label for="replace_in_local"> Replace in local file: Will write the changes in the file</label> <br/>
+    <input type="checkbox" id="create_sql"  name="create_sql" checked="checked" disabled/> <label for="create_sql"> Show executed sql.</label> <br/> 
+    <input type="checkbox" id="execute_sql" name="execute_sql" checked="checked" /> <label for="execute_sql"> Execute generated SQL into current database, create the migrate file and also save the migrate in migrates table.</label> <br/>
     <input type="hidden"   id="filepath"    name="filepath" value="{{replace_full_filename}}" />
     <input  type="submit" name="btnSubmit" value="Execute" /> 
     </form>

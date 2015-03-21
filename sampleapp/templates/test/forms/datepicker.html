@@ -1,0 +1,9 @@
+<label for="{replace_name}">{replace_label}</label>
+<input type="text" id="{replace_id}" name="{replace_name}" value="{replace_value}" {extra_attributes} /> <br/>
+
+<script>
+$(document).ready(function(){
+     $( "#{replace_id}" ).datepicker();
+  });
+
+</script>

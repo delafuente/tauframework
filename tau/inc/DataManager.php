@@ -36,7 +36,7 @@ class DataManager {
         if(!$db_pass){ $this->db_pass = DB_ADMIN_PASSWD; }
         if(!$db_user){ $this->db_user = DB_ADMIN; }
                 
-        $this->db = new ezSQL_mysql($this->db_user, $this->db_pass, $this->db_name, $this->db_host);
+        $this->db = new ezSQL_mysql($this->db_user, $this->db_pass, $this->db_name, $this->db_host, "UTF-8");
         $this->lastErrorMessage = "NO ERROR";
         $this->lastErrorTrace = "NO TRACE";
         $this->makeQuery("SET NAMES utf8");
@@ -99,7 +99,7 @@ class DataManager {
 
     public function makeQuery($query){
         $res = $this->db->query($query);
-        return $this->getQueryResult($res);
+        return $this->getQueryResult($res, $query);
     }
     /**
      * Get array of type arr[key_field] = value_field
@@ -213,7 +213,10 @@ class DataManager {
             return $this->db->escape($vars);
         }
     }
-
+    public function getDebug(){
+        return $this->db->debug();
+    }
+    
     public function getLastErrorMessage(){
         return $this->lastErrorMessage;
     }
@@ -224,15 +227,23 @@ class DataManager {
         //echo "<p>DataManager close() for database " . $this->getDataBaseName() . "</p>";
         $this->db->disconnect();
     }
+    public function getAffectedRows(){
+        return $this->db->rows_affected;
+    }
     /**
      * Internal function to grab the error if any, and return the result
      * of a query function.
      * @param resource $res The result of a query
      * @return mixed false if fails, result of query otherwise
      */
-    protected function getQueryResult($res){
+    protected function getQueryResult($res, $query = ""){
         if($res === false){
-            $this->lastErrorMessage = $this->db->last_error;
+            if($this->db->rows_affected === -1){
+                $this->lastErrorMessage = "Sentence don't modified rows";
+                return false;
+            }else{
+                return true;
+            }
             return false;
         }else{
             return $res;

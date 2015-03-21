@@ -15,16 +15,20 @@ define('__ROOT__', str_replace("\\","/",dirname(dirname(__FILE__))) );
 
 require_once( __ROOT__ . "/tau/inc/config.php");
 require_once( __ROOT__ . "/tau/inc/PageRender.php");
+require_once( __ROOT__ . "/tau/inc/Replacer.php");
 require_once( __ROOT__ . "/tau/Tau.php" );
 require_once( __ROOT__ . "/tau/inc/DataManager.php");
 require_once( __ROOT__ . "/tau/inc/InputValidator.php");
 require_once( __ROOT__ . "/tau/inc/LanguageLoader.php");
 require_once( __ROOT__ . "/tau/inc/LogFile.php");
-require_once( __ROOT__ . "/tau/inc/TauFriendship.php");
+require_once( __ROOT__ . "/tau/inc/TauFriendShip.php");
 require_once( __ROOT__ . "/tau/inc/elements/TauForm.php");
 require_once( __ROOT__ . "/tau/inc/framework/TauURI.php");
 require_once( __ROOT__ . "/tau/inc/framework/TauMessages.php");
 require_once( __ROOT__ . "/tau/inc/framework/TauSession.php");
+require_once( __ROOT__ . "/tau/inc/framework/TauRequest.php");
+require_once( __ROOT__ . "/tau/inc/framework/TauDispatcher.php");
+require_once( __ROOT__ . "/tau/inc/framework/TauRouter.php");
 require_once( WEB_PATH . "/routes/general.php");
 //ToDo: Make InputValidator fully static
 

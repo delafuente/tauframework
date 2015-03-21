@@ -1,0 +1,13 @@
+/* 
+    Created on : 07-mar-2015, 14:40:53
+    Author     : Lucas de la Fuente
+*/
+
+.spanError{
+    color:#f33;
+}
+
+.fieldError{
+    color:#fff;
+    background-color: #f99;
+}

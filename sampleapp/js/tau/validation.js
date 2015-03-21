@@ -1,5 +1,5 @@
 
-    
+    $.fn.getType = function(){ return this[0].tagName == "INPUT" ? this[0].type.toLowerCase() : this[0].tagName.toLowerCase(); }
     
     var tauValidation= (function($, undefined){
         
@@ -25,6 +25,7 @@
             var fieldRulesArr = val_rules.split(",");
             var fieldRules = new Array();
             var i=0;
+            var hasToReturn = true;
             
             for(i=0;i<fieldNames.length;i++){
                 fieldRules[fieldNames[i]]=fieldRulesArr[i];
@@ -32,12 +33,12 @@
                 aRules = fieldRulesArr[i].split("|");
                 
                 if(! tauValidation.validateField(fieldNames[i],aRules)){
-                    return false;
+                    hasToReturn = false;
                 }
             
             }
             
-            return true;
+            return hasToReturn;
         };
         
         var validateField = function(field_id,a_rules){
@@ -78,7 +79,18 @@
                 
                 switch(ruleName){
                     case '*':
-                        if(fieldValue==""){
+                        var selectDisabled = false;
+                        if( $("#" + field_id).getType() == 'select'){
+                            $("#" + field_id + " > option").each(function() {
+                            if(this != undefined){
+                                if( this.selected && this.disabled ){
+                                    selectDisabled = true;
+                                }
+                            }     
+                            });
+                        }
+                        
+                        if(fieldValue=="" || selectDisabled){
                             tauValidation.setErrorField(field_id,"required");
                             return false;
                         }
@@ -91,7 +103,7 @@
                         }
                         break;
                     case 'aex':
-                        if(!tauValidation.isAlphaNumeric(fieldValue,"ÇÁÉÍÓÚÄËÏÖÜçáéíóúäëïöü_- '")){
+                        if(!tauValidation.isAlphaNumeric(fieldValue,"áéíóúÁÉÍÓÚäëïöüÄËÏÖÜàèìòùÀÈÌÒÙçÇ_-ß'")){
                             tauValidation.setErrorField(field_id,"alphanumex");
                             return false;
                         }
@@ -193,17 +205,17 @@
             
             var message = tauValidation.formatValidationMessage(field_id,error_type,error_param);
             
-            $("#" + field_id).addClass("val_error").after(message);
-            tauValidation.outlineRed(field_id);
+            $("#" + field_id).addClass(FIELD_ERROR_CLASS).after(message);
+            //tauValidation.outlineRed(field_id);
         
         };
         
         var removeErrorField = function (field_id){
             var msg_id = "msgof_" + field_id;
             var p_message_ref = $("#" + msg_id);
-            tauValidation.outlineNone(field_id);
+            //tauValidation.outlineNone(field_id);
             if(p_message_ref != undefined){
-                $("#" + field_id).removeClass("val_error");
+                $("#" + field_id).removeClass(FIELD_ERROR_CLASS);
                 p_message_ref.remove();
             }
         };
@@ -312,7 +324,8 @@
             var msg = tau_validation[mtype];
             msg =  msg.replace("rpl_param",par);
             
-            return "<p id='msgof_" + fld_id + "' style='color:#f00;' title='" + msg + "'>error</p>";
+            return " <span id='msgof_" + fld_id + "' class='" + SPAN_ERROR_CLASS 
+                    +"' title='" + msg + "'>"+msg+"</span>";
         
         };
         return {

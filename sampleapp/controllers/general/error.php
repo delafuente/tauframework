@@ -12,4 +12,4 @@
  */
 
 echo "<h1>Error</h1>";
-echo "<p> Returned: " . TauSession::get('error') ." : ".$tauContext['lang']. "</p>";
+echo "<p> Returned error: [ " . TauSession::get('last_error') ." ] : ".$tauContext['lang']. "</p>";

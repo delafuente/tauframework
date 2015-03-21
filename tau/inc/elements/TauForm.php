@@ -39,20 +39,30 @@ class TauForm {
     protected $elementReplacers; //Array of all replacements of replacement => replace with
     protected $modelData; //holds the row of the model if necessary
     protected $modelMapping; //holds the map of [table_field_name] = field_id
-   
+    protected $submitValue;
+    protected $submitTheme;
+    protected $formTheme;
+    protected $formHash;
+    protected $disableSubmit;
+    
     /**
      * Creates a new Form object
      * @param string $id The html id
      * @param string $action The form action value
-     * @param string $theme The folder theme name
+     * @param string $theme The folder theme name, default 'default'
      * @param string $name The html name, default is equals to id
      * @param string $enctype The form enctype
-     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value,
+     * @param array $extraAttributes string with key=form attr name, 
+     * value=form attribute value,
      * like $myAttributeArray['accept']="jpg,png"
      */
-    public function __construct($id, $action, $theme ='default', $name=false, $enctype='multipart/form-data', $extraAttributes=false){
-        
-
+    public function __construct( 
+            $id, 
+            $action,
+            $theme ='default',
+            $name=false,
+            $enctype='multipart/form-data',
+            $extraAttributes=false){
         
         $this->id = $id;
         $this->action = $action;
@@ -71,20 +81,25 @@ class TauForm {
         $this->defaultTheme = $theme;
         $this->formTitle = $name;
         $this->hiddenInputs = "";
-
-
-        
+        $this->submitValue = "Undefined Text";
+        $this->submitTheme = false;
+        $this->formTheme = false;
+        $this->disableSubmit = false;
         $this->elements = array();
         $this->elementTypes = array();
         $this->elementNames = array();
         $this->elementValidation = array();
         $this->elementLabels = array();
-        //$this->elementRequiredClasses = array();
-        //$this->elementPostInputHtml = array();
         $this->modelData = false;
         $this->modelMapping = false;
+        $this->formHash = uniqid();
         $this->setThemeMapping();
     }
+    
+    public function setSubmitButtonText($text){
+        $this->submitValue = $text;
+    }
+    
     /**
      * For existing data, get the row information to show in form
      * @param type $model Table name
@@ -103,6 +118,7 @@ class TauForm {
             $this->modelMapping[$key] = $key;
         }
     }
+    
     /**
      * If table fields and html fields names aren't identical, we need to add
      * a mapping of type html_field => table_field. We need to map only fields needed.
@@ -111,25 +127,26 @@ class TauForm {
     public function setModelMapping(array $modelMapping){
         $this->modelMapping = $modelMapping;
     }
+    
     protected function setThemeMapping(){
         $this->themeMapping = array(
             'button' => 'templates/{rep_theme}/forms/button.html',  
             'checkbox' => 'templates/{rep_theme}/forms/checkbox.html',
             'checkboxes_group' => 'templates/{rep_theme}/forms/checkboxes_group.html',
             'container' => 'templates/{rep_theme}/forms/container.html',
-            'datepicker' => 'templates/{rep_theme}/forms/datepicker',
+            'datepicker' => 'templates/{rep_theme}/forms/datepicker.html',
+            'datepicker_custom' => 'templates/{rep_theme}/forms/datepicker_custom.html',
             'file' => 'templates/{rep_theme}/forms/file.html',
             'file_image' => 'templates/{rep_theme}/forms/file_image.html',
             'form' => 'templates/{rep_theme}/forms/form.html',
             'hidden' => 'templates/{rep_theme}/forms/hidden.html',
-            'linked_select' => 'templates/{rep_theme}/forms/linked_select.html',
-            'options_group' => 'templates/{rep_theme}/forms/options_group.html',
+            'radio_button' => 'templates/{rep_theme}/forms/radio_button.html',
             'password' => 'templates/{rep_theme}/forms/password.html',
             'select' => 'templates/{rep_theme}/forms/select.html',
             'select_option' => 'templates/{rep_theme}/forms/select_option.html',
             'submit' => 'templates/{rep_theme}/forms/submit.html',
             'text' => 'templates/{rep_theme}/forms/text.html',
-            'textarea' => 'templates/{rep_theme}/forms/textarea'
+            'textarea' => 'templates/{rep_theme}/forms/textarea.html'
         );
     }
     
@@ -148,7 +165,9 @@ class TauForm {
             
         }
     }
-    
+    public function disableSubmit(){
+        $this->disableSubmit = true;
+    }
     /**
      * Set the caption of the form
      * @param string $title The caption of the form
@@ -156,15 +175,49 @@ class TauForm {
     public function setFormTitle($title){
         $this->formTitle = $title;
     }
+        /**
+     * Inserts an $type input, the order of insertion is the order of appearance
+     * @param string $type The tau type of the field
+     * @param string $id The html id
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
+     * @param string $label The 'label for' text of the element, like "Insert your e-mail"
+     * @param string $theme Theme of the input. Same as form theme if not specified.
+     * @param string $name The html name, if false (default) it's equals to id. Must be unique.
+     * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
+     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
+     */
+    protected function addGeneralInput(
+            $type,
+            $id,
+            $validationRules = false,
+            $label = false,
+            $theme = false, 
+            $name = false,
+            $defaultValue = false,
+            array $extraAttributes = null,
+            array $autoReplacers = null){
+        
+        $inputData = $this->generalInputDataFormatter($id, $validationRules,
+                $label, $name, $defaultValue, $extraAttributes, $autoReplacers);
+        
+        $input = $this->getTemplate($type, $theme);
+        $attributeReplacements = array('{replace_id}', '{replace_name}', '{replace_label}', '{replace_value}', '{extra_attributes}');
+        $attributeReplacers = array($inputData['id'], $inputData['name'], $inputData['label'], $inputData['value'], $inputData['extraAttributesHtml']);
+        $input = str_replace($attributeReplacements, $attributeReplacers, $input);
+        
+        $this->saveData($input, $type, $inputData);
+        
+    }
     /* TYPES: [input] text|password|checkbox|radio|submit|reset|file|hidden|image|button
      * OTHER TYPES: textarea,[list|select],reCaptcha
      */
     /**
      * Inserts an input text, the order of insertion is the order of appearance
      * @param string $id The html id
-     * @param string $validationRules The encoded validation rules for javascript, see help on validation
-     * @param string $theme Theme of the input. Same as form theme if not specified.
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
      * @param string $label The 'label for' text of the element, like "Insert your e-mail"
+     * @param string $theme Theme of the input. Same as form theme if not specified.
      * @param string $name The html name, if false (default) it's equals to id. Must be unique.
      * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
      * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
@@ -180,152 +233,395 @@ class TauForm {
             array $extraAttributes = null,
             array $autoReplacers = null){
         
-        $inputData = $this->generalInputDataFormatter($id, $validationRules,
-                $label, $name, $defaultValue, $extraAttributes, $autoReplacers);
-        
-        $input = $this->getTemplate('text', $theme);
-        $attributeReplacements = array('{replace_id}', '{replace_name}', '{replace_label}', '{replace_value}', '{extra_attributes}');
-        $attributeReplacers = array($inputData['id'], $inputData['name'], $inputData['label'], $inputData['value'], $inputData['extraAttributesHtml']);
-        $input = str_replace($attributeReplacements, $attributeReplacers, $input);
-        
-        $this->saveData($input, 'text', $inputData);
+        $this->addGeneralInput('text', $id, $validationRules, $label, $theme,
+                $name, $defaultValue, $extraAttributes, $autoReplacers);
         
     }
     /**
+     * Inserts an input button, the order of insertion is the order of appearance
+     * @param string $id The html id
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
+     * @param string $label The 'label for' text of the element, like "Insert your e-mail"
+     * @param string $theme Theme of the input. Same as form theme if not specified.
+     * @param string $name The html name, if false (default) it's equals to id. Must be unique.
+     * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
+     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
+     */
+    public function addInputButton(
+            $id,
+            $validationRules = false,
+            $label = false,
+            $theme = false, 
+            $name = false,
+            $defaultValue = false,
+            array $extraAttributes = null,
+            array $autoReplacers = null){
+        
+        $this->addGeneralInput('button', $id, $validationRules, $label, $theme,
+                $name, $defaultValue, $extraAttributes, $autoReplacers);
+        
+    }
+    
+    /**
      * Inserts an input checkbox, the order of insertion is the order of appearance
      * @param string $id The html id
-     * @param string $validationRules The encoded validation rules for javascript, see help on validation
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
      * @param string $label The 'label for' text of the element, like "Insert your e-mail"
-     * @param string $requiredClass If not false, adds an * after the label in a span with this class or space separated classes.
-     * @param string $postInputHtml Html to be written just after the input, like help or hint
+     * @param string $theme Theme of the input. Same as form theme if not specified.
      * @param string $name The html name, if false (default) it's equals to id. Must be unique.
-     * @param string $cssClasses The css classes, space separated
-     * @param string $defaultValue The input default value. If true, will be checked.
-     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value,
-     * like $myAttributeArray['onChange']="javascript:testValue();" or $myAttributeArray['placeholder']='Enter your e-mail'
+     * @param string $defaultValue The input default value. If it's not false, the checkbox will be checked
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
+     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
      */
-    public function addInputCheckbox($id,$validationRules=false,$label=false,$requiredClass=false,
-            $postInputHtml=false,$name=false,$cssClasses=false,$defaultValue=false
-            ,$extraAttributes=false){
+    public function addInputCheckBox(
+            $id,
+            $validationRules = false,
+            $label = false,
+            $theme = false, 
+            $name = false,
+            $defaultValue = false,
+            array $extraAttributes = null,
+            array $autoReplacers = null){
         
-        $inputData = $this->generalInputDataFormatter($id, $validationRules,
-                $label, $requiredClass, $postInputHtml, $name, $cssClasses,
-                $defaultValue, $extraAttributes);
-
-        $input = "\t<input type='checkbox' id='" .$inputData['id']. "' name='".
-        $inputData['name']."' ";
-        
-        $checked = "";
-        if($inputData['value']){
-            $checked = " checked='checked' ";
+        if($defaultValue){
+            if(!is_array($extraAttributes)){
+                $extraAttributes = array();
+            }
+            $extraAttributes['checked'] = 'checked';
         }
         
-        $input .= $inputData['classes'] . $checked;
-        $input .= $inputData['extraAttributesHtml'];
-        $input .= " style='' ";
-        $input .= " />\n";
-        
-        $this->saveData($input, 'checkbox', $inputData);
+        $this->addGeneralInput('checkbox', $id, $validationRules, $label, $theme,
+                $name, $defaultValue, $extraAttributes, $autoReplacers);
         
     }
-     /**
-     * Inserts textarea element, the order of insertion is the order of appearance
+        /**
+     * Inserts an input radio button, the order of insertion is the order of appearance
      * @param string $id The html id
-     * @param string $validationRules The encoded validation rules for javascript, see help on validation
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
      * @param string $label The 'label for' text of the element, like "Insert your e-mail"
-     * @param string $requiredClass If not false, adds an * after the label in a span with this class or space separated classes.
-     * @param string $postInputHtml Html to be written just after the input, like help or hint
+     * @param string $theme Theme of the input. Same as form theme if not specified.
      * @param string $name The html name, if false (default) it's equals to id. Must be unique.
-     * @param string $cssClasses The css classes, space separated
-     * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
-     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value,
-     * like $myAttributeArray['onChange']="javascript:testValue();" or $myAttributeArray['placeholder']='Enter your e-mail'
+     * @param string $defaultValue The input default value. If it's not false, the radio button will be checked
+     * @param boolean $checked If true, the radio button will be checked 
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
+     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
      */
-    public function addTextArea($id,$validationRules=false,$label=false,$requiredClass=false,
-            $postInputHtml=false,$name=false,$cssClasses=false,$defaultValue=""
-            ,$extraAttributes=false){
+    public function addInputRadioButton(
+            $id,
+            $validationRules = false,
+            $label = false,
+            $theme = false, 
+            $name = false,
+            $defaultValue = false,
+            $checked = false,
+            array $extraAttributes = null,
+            array $autoReplacers = null){
         
-        $inputData = $this->generalInputDataFormatter($id, $validationRules,
-                $label, $requiredClass, $postInputHtml, $name, $cssClasses,
-                $defaultValue, $extraAttributes);
-
-        $input = "\t<textarea id='" .$inputData['id']. "' name='".
-        $inputData['name']."' ";
-
-        $input .= $inputData['classes'];
-        $input .= $inputData['extraAttributesHtml'];
-        $input .= " style=''";
-        $input .= " >\n";
-        $input .= $defaultValue . "</textarea>\n";
+        if($checked){
+            if(!is_array($extraAttributes)){
+                $extraAttributes = array();
+            }
+            $extraAttributes['checked'] = 'checked';
+        }
         
-        $this->saveData($input, 'textarea', $inputData);
+        $this->addGeneralInput('radio_button', $id, $validationRules, $label, $theme,
+                $name, $defaultValue, $extraAttributes, $autoReplacers);
+        
     }
- /**
+    /**
      * Inserts an input password, the order of insertion is the order of appearance
      * @param string $id The html id
-     * @param string $validationRules The encoded validation rules for javascript, see help on validation
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
      * @param string $label The 'label for' text of the element, like "Insert your e-mail"
-     * @param string $requiredClass If not false, adds an * after the label in a span with this class or space separated classes.
-     * @param string $postInputHtml Html to be written just after the input, like help or hint
+     * @param string $theme Theme of the input. Same as form theme if not specified.
      * @param string $name The html name, if false (default) it's equals to id. Must be unique.
-     * @param string $cssClasses The css classes, space separated
      * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
-     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value,
-     * like $myAttributeArray['onChange']="javascript:testValue();" or $myAttributeArray['placeholder']='Enter your e-mail'
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
+     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
      */
-    public function addInputPassword($id,$validationRules=false,$label=false,$requiredClass=false,
-            $postInputHtml=false,$name=false,$cssClasses=false,$defaultValue=""
-            ,$extraAttributes=false){
+    public function addInputPassword(
+            $id,
+            $validationRules = false,
+            $label = false,
+            $theme = false, 
+            $name = false,
+            $defaultValue = false,
+            array $extraAttributes = null,
+            array $autoReplacers = null){
         
-        $inputData = $this->generalInputDataFormatter($id, $validationRules,
-                $label, $requiredClass, $postInputHtml, $name, $cssClasses,
-                $defaultValue, $extraAttributes);
-
-        $input = "\t<input type='password' id='" .$inputData['id']. "' name='".
-        $inputData['name']."' ";
-
-        $input .= $inputData['classes'] . $inputData['value'];
-        $input .= $inputData['extraAttributesHtml'];
-        $input .= " style=''";
-        $input .= " />\n";
+        $this->addGeneralInput('password', $id, $validationRules, $label, $theme,
+                $name, $defaultValue, $extraAttributes, $autoReplacers);
         
-        $this->saveData($input, 'password', $inputData);
+    }
+       /**
+     * Inserts an input hidden, the order of insertion is the order of appearance
+     * @param string $id The html id
+     * @param string $theme Theme of the input. Same as form theme if not specified.
+     * @param string $name The html name, if false (default) it's equals to id. Must be unique.
+     * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
+     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
+     */
+    public function addInputHidden(
+            $id,
+            $theme = false, 
+            $name = false,
+            $defaultValue = false,
+            array $extraAttributes = null,
+            array $autoReplacers = null){
+        
+        $label = false;
+        $validationRules = false;
+        
+        $this->addGeneralInput('hidden', $id, $validationRules, $label, $theme,
+                $name, $defaultValue, $extraAttributes, $autoReplacers);
+        
+    }
+    /**
+     * Inserts an input textarea, the order of insertion is the order of appearance
+     * @param string $id The html id
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
+     * @param string $label The 'label for' text of the element, like "Insert your e-mail"
+     * @param string $theme Theme of the input. Same as form theme if not specified.
+     * @param string $name The html name, if false (default) it's equals to id. Must be unique.
+     * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
+     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
+     */
+    public function addInputTextArea(
+            $id,
+            $validationRules = false,
+            $label = false,
+            $theme = false, 
+            $name = false,
+            $defaultValue = false,
+            array $extraAttributes = null,
+            array $autoReplacers = null){
+        
+        $this->addGeneralInput('textarea', $id, $validationRules, $label, $theme,
+                $name, $defaultValue, $extraAttributes, $autoReplacers);
+        
+    }
+        /**
+     * Inserts an input datepicker, the order of insertion is the order of appearance
+     * @param string $id The html id
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
+     * @param string $label The 'label for' text of the element, like "Insert your e-mail"
+     * @param string $theme Theme of the input. Same as form theme if not specified.
+     * @param string $name The html name, if false (default) it's equals to id. Must be unique.
+     * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
+     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
+     */
+    public function addInputDate(
+            $id,
+            $validationRules = false,
+            $label = false,
+            $theme = false, 
+            $name = false,
+            $defaultValue = false,
+            array $extraAttributes = null,
+            array $autoReplacers = null){
+        
+        $this->addGeneralInput('datepicker', $id, $validationRules, $label, $theme,
+                $name, $defaultValue, $extraAttributes, $autoReplacers);
+        
+    }
+         /**
+     * Inserts an input datepicker, but not the datepicker js code 
+     * @param string $id The html id
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
+     * @param string $label The 'label for' text of the element, like "Insert your e-mail"
+     * @param string $theme Theme of the input. Same as form theme if not specified.
+     * @param string $name The html name, if false (default) it's equals to id. Must be unique.
+     * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
+     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
+     */
+    public function addInputDateCustom(
+            $id,
+            $validationRules = false,
+            $label = false,
+            $theme = false, 
+            $name = false,
+            $defaultValue = false,
+            array $extraAttributes = null,
+            array $autoReplacers = null){
+        
+        $this->addGeneralInput('datepicker_custom', $id, $validationRules, $label, $theme,
+                $name, $defaultValue, $extraAttributes, $autoReplacers);
         
     }
      /**
-     * Inserts an input hidden, the order of insertion is the order of appearance
+     * Inserts an input file image, the order of insertion is the order of appearance
      * @param string $id The html id
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
+     * @param string $label The 'label for' text of the element, like "Insert your e-mail"
+     * @param string $theme Theme of the input. Same as form theme if not specified.
      * @param string $name The html name, if false (default) it's equals to id. Must be unique.
      * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
-     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value,
-     * like $myAttributeArray['onChange']="javascript:testValue();" or $myAttributeArray['placeholder']='Enter your e-mail'
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
+     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
      */
-    public function addInputHidden($id,$name=false,$defaultValue="",$extraAttributes=false){
-        $requiredClass=false;
-        $postInputHtml=false;
-        $cssClasses=false;
-        $label=false;
-        $validationRules = "o";
-
+    public function addInputFileImage(
+            $id,
+            $validationRules = false,
+            $label = false,
+            $theme = false, 
+            $name = false,
+            $defaultValue = false,
+            array $extraAttributes = null,
+            array $autoReplacers = null){
+        
+        if($defaultValue){
+            $thumb = APPLICATION_BASE_URL ."/". $defaultValue;
+            $thumb = str_replace('imagesu','thumbs',$thumb);
+            $autoReplacers = array("{replace_thumb_path}" => $thumb);
+        }else{
+            $autoReplacers = array("{replace_thumb_path}" => "");
+        }
+        $this->addGeneralInput('file_image', $id, $validationRules, $label, $theme,
+                $name, $defaultValue, $extraAttributes, $autoReplacers);
+        
+    }
+    /**
+     * Inserts an input file, the order of insertion is the order of appearance
+     * @param string $id The html id
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
+     * @param string $label The 'label for' text of the element, like "Insert your e-mail"
+     * @param string $theme Theme of the input. Same as form theme if not specified.
+     * @param string $name The html name, if false (default) it's equals to id. Must be unique.
+     * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
+     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
+     */
+    public function addInputFile(
+            $id,
+            $validationRules = false,
+            $label = false,
+            $theme = false, 
+            $name = false,
+            $defaultValue = false,
+            array $extraAttributes = null,
+            array $autoReplacers = null){
+             
+        $this->addGeneralInput('file', $id, $validationRules, $label, $theme,
+                $name, $defaultValue, $extraAttributes, $autoReplacers);
+        
+    }
+    
+     /**
+     * Inserts a select or list, insertion is the order of appearance
+     * @param string $id The html id
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
+     * @param string $label The 'label for' text of the element, like "Insert your e-mail"
+     * @param array $data The option value -> text array
+     * @param string $theme Theme of the input. Same as form theme if not specified.
+     * @param string $name The html name, if false (default) it's equals to id. Must be unique.
+     * @param string $defaultValue The input default value. If you want a 'placeholder' attribute, use the extraAttributes array.
+     * @param array $linkedTo Array with db_name, getvalue, gettext, searchfield, searchvalue ( see help on wiki.tauframework.com )
+     * @param array $extraAttributes Array string with key=form attribute name, value=form attribute value, like $myAttributeArray['onChange']="javascript:testValue();"
+     * @param array $autoReplacers key - value array with replace_text - replace_with values to be replaced in template
+     */
+    public function addInputSelect(
+            $id,
+            $validationRules = false,
+            $label = false,
+            array $data = null,
+            $theme = false, 
+            $name = false,
+            $defaultValue = false,
+            array $linkedTo = null,
+            array $extraAttributes = null,
+            array $autoReplacers = null){
+        
         $inputData = $this->generalInputDataFormatter($id, $validationRules,
-                $label, $requiredClass, $postInputHtml, $name, $cssClasses,
-                $defaultValue, $extraAttributes);
+                $label, $name, $defaultValue, $extraAttributes, $autoReplacers);
+        
+        $input = $this->getTemplate('select', $theme);
+        $attributeReplacements = array('{replace_id}', '{replace_name}', 
+            '{replace_label}', '{replace_value}', '{extra_attributes}');
+        $attributeReplacers = array($inputData['id'], $inputData['name'], 
+            $inputData['label'], $inputData['value'], $inputData['extraAttributesHtml']);
+        $input = str_replace($attributeReplacements, $attributeReplacers, $input);
+        
+        if($linkedTo){
+            $data = $this->getDataList($linkedTo);
+        }
+        
+        $optionTemplate = $this->getTemplate('select_option', $theme);
+        $options = "";
+        foreach($data as $key => $value){
+            if( $key == "" ){
+                $replace_selected = " disabled selected ";
+            }else if( $key == $defaultValue ){
+                $replace_selected = " selected ";
+            }else{
+                $replace_selected = "";
+            }
+            $replaceLabels = array('{replace_name}', '{replace_option_value}',
+                '{replace_selected}','{replace_option_text}');
+            $replaceWith = array($inputData['name'], $key, $replace_selected,
+                    $value);
+            $options .= str_replace($replaceLabels, $replaceWith, $optionTemplate);
+            $options .= "\n";
+        }
+        $input = str_replace('{replace_select_options}', $options, $input);
+        
+        $this->saveData($input, 'select', $inputData);
+        
+    }
+    public function addInputSubmitButton($text, $theme = false){
+        $this->submitValue = $text;
+        $this->submitTheme = $theme;
+    }
+    
+    public function changeFormTheme($theme){
+        $this->formTheme = $theme;
+    }
+    /**
+     * Get results from db to fill in options in select input with data
+     * @param array $linkedTo Input array to get values
+     * @return array $data results from db, with getvalue and gettext for options in select
+     */
+    protected function getDataList($linkedTo){
+        
+        $errData = array('err' => 'bad select operation');
 
-        $input = "\t<input type='hidden' id='" .$inputData['id']. "' name='".
-        $inputData['name']."' ";
+        if(isset($linkedTo['db_name'])){ 
+            $db_name = $linkedTo['db_name'];
+        }else{
+            $db_name = "";
+        }
+        $validOperators = array('=','<>','>','<','<=','>=');
+        if(in_array($linkedTo['operator'], $validOperators)){
 
-        $input .=  $inputData['value'];
-        $input .= $inputData['extraAttributesHtml'];
-        $input .= " style=''";
-        $input .= " />\n";
+            $query = "select ".$linkedTo['getvalue'].",".$linkedTo['gettext'].
+                " from ".$linkedTo['table']." where ".$linkedTo['searchfield'].
+                " ".$linkedTo['operator']."'".$linkedTo['searchvalue']."';";
+            $res = DataManager::getInstance($db_name)->getResults($query);
+            if(!$res){
+                return $errData;
+            }else{
+                
+                $data = array();
+                
+                foreach($res as $row){
+                    $data[ $row[$linkedTo['getvalue']] ] = 
+                            $row[ $linkedTo['gettext'] ];
+                }
+                return $data;
+            }
 
-        $this->saveData($input, 'hidden', $inputData);
-
+        }else{
+            return $errData;
+        }
     }
      /**
      * Inserts an input reCaptcha, the order of insertion is the order of appearance
      * @param string $id The html id
-     * @param string $validationRules The encoded validation rules for javascript, see help on validation
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
      * @param string $label The 'label for' text of the element, like "Insert your e-mail"
      * @param string $requiredClass If not false, adds an * after the label in a span with this class or space separated classes.
      * @param string $postInputHtml Html to be written just after the input, like help or hint
@@ -348,7 +644,6 @@ class TauForm {
         $inputData = $this->generalInputDataFormatter($id, $validationRules,
                 $label, $requiredClass, $postInputHtml, $name, $cssClasses,
                 $defaultValue, $extraAttributes);
-
 
         $this->saveData($captcha_html, 'reCaptcha', $inputData);
 
@@ -387,7 +682,7 @@ class TauForm {
             }
         }
         
-        $html .= $this->getTemplate('form');
+        $html .= $this->getTemplate('form', $this->formTheme);
         $attributeReplacements = array('{replace_id}','{replace_name}','{replace_action}','{replace_method}', '{replace_enctype}', '{extra_attributes}');
         $attributeReplacers = array($this->id, $this->name, $this->action, 'post', $this->encType, $extraAttributes);
         $html = str_replace($attributeReplacements, $attributeReplacers, $html);
@@ -412,12 +707,22 @@ class TauForm {
             }
             $html .= $elem;
         }
-
-        $html .= $this->getSubmitButton();
+        
+        TauSession::put(
+                'validationFor_' . $this->formHash . "_names"
+                , $names);
+        
+        TauSession::put(
+                'validationFor_' .  $this->formHash . "_rules"
+                , $validation);
+        if(!$this->disableSubmit){
+            $html .= $this->getSubmitButton();
+        }
+        
 
         $html .= "</form>\n"; 
         
-        $container = $this->getTemplate('container', $containerTemplate);
+        $container = $this->getTemplate('container', $containerTheme);
         
         $html = str_replace("{replace_form}",$html,$container);
         
@@ -447,6 +752,7 @@ class TauForm {
         
         return $this->elements[$counter];
     }
+
     /**
      * Obtains a formatted submit button
      * @return string The html for the element
@@ -455,11 +761,13 @@ class TauForm {
 
         $html ="";
         
-        $hidden_form_hash ='<input type="hidden" id="form_hash" name="form_hash" value="replace_form_hash" />' . "\n";
-        $sendButton='<input id="sendButton" name="sendButton" type="button"' .
-        'value="' . $this->submitValue  .'" style="float:right;top:10px;" class="button highlight" onclick="javascript:tauValidation.testToSend(\'' .
-                $this->id . '\');"/> <br/>' . "\n";
-    
+        $hidden_form_hash ='<input type="hidden" id="form_hash" '
+                . 'name="form_hash" value="'.$this->formHash.'" />' . "\n";
+        
+        $sendButton = $this->getTemplate('submit', $this->submitTheme);
+        $sendButton = str_replace("{replace_value}", $this->submitValue, $sendButton);
+        $sendButton = str_replace("{replace_id}", $this->id, $sendButton);
+        
         $html =  $hidden_form_hash . $this->hiddenInputs . $sendButton ;
 
         return $html;
@@ -468,7 +776,7 @@ class TauForm {
      /**
      * Common input data parser, to be used for all get<InputElement>() methods
      * @param string $id The html id
-     * @param string $validationRules The encoded validation rules for javascript, see help on validation
+     * @param string $validationRules The encoded validation rules for javascript and server side, see help on validation
      * @param string $label The 'label for' text of the element, like "Insert your e-mail".
      * @param string $name The html name, if false (default) it's equals to id. Must be unique.
      * @param string $value The input value. If you want a 'placeholder' attribute, use the extraAttributes array.
@@ -482,8 +790,9 @@ class TauForm {
 
         $validationRules = ($validationRules)?$validationRules:"o";
         $name = ($name)?$name:$id;
-        $value = ($defaultValue)?$defaultValue:"";
+        $value = ($value)?$value:"";
         $label = ($label)?$label:"";
+        $extraAttributesHtml = "";
         
         if($extraAttributes){
             foreach($extraAttributes as $attrKey => $attrValue){
@@ -491,7 +800,9 @@ class TauForm {
             }
         }
         
-        if($this->modelData !== false){ $value = $this->modelData[$this->modelMapping[$name]]; }
+        if( $this->modelData !== false && isset($this->modelMapping[$name]) ){ 
+            $value = $this->modelData[$this->modelMapping[$name]]; 
+        }
         
         $returnData = array();
         $returnData['id'] = $id;

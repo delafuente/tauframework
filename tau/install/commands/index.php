@@ -10,9 +10,5 @@
  * @copyright (c) Lucas de la Fuente <lucasdelafuente1978@gmail.com>
  * @license https://github.com/delafuente/tauframework/blob/master/LICENSE The MIT License (MIT)
  */
+header("Location: ../../");
 ?>
-<p>Select commands from list</p>
-
-<ul>
-    <li>languageCompleter.php?file=/path/to/file</li>
-</ul>

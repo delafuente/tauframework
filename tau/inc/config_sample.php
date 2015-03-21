@@ -28,7 +28,7 @@ if( APPLICATION_ENVIRONMENT == 'local' ){
     define('TLD','com');
     define('LANG','es');
     define('BASE','sampleapp');
-    define('LAYOUT','standard');
+    define('LAYOUT','default');
     define('ERROR_REPORTING_STATUS',true);
     //edit end
     define('SETTINGS_FILE', $tau_base_path . '/inc/settings.php');
@@ -41,7 +41,7 @@ if( APPLICATION_ENVIRONMENT == 'local' ){
     define('TLD','com');
     define('LANG','es');
     define('BASE','sampleapp');
-    define('LAYOUT','standard');
+    define('LAYOUT','default');
     define('ERROR_REPORTING_STATUS',true);
     //edit end
     define('SETTINGS_FILE', $tau_base_path . '/inc/settings.php');
@@ -55,7 +55,7 @@ if( APPLICATION_ENVIRONMENT == 'local' ){
     define('TLD','com');
     define('LANG','es');
     define('BASE','sampleapp');
-    define('LAYOUT','standard');
+    define('LAYOUT','default');
     define('ERROR_REPORTING_STATUS',false);
     //edit end
     define('SETTINGS_FILE', $tau_base_path . '/inc/settings.php');

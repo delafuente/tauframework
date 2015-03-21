@@ -12,6 +12,7 @@
  */
 
 $urlMap = array(
+    '/es$/' => 'controllers/index/index.php',
     '/es\/entrar\/?/' => 'controllers/general/login.php',
     '/es\/registro\/?/' => 'controllers/index/index.php',
     '/es\/buscar\/?/' => 'controllers/index/index.php',
