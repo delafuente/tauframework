@@ -10,7 +10,7 @@
  * @license https://github.com/delafuente/tauframework/blob/master/LICENSE The MIT License (MIT)
  */
 
-class Cache {
+class TauCache {
 
     protected $last_edit; //last edit of file
     protected $fileHash; //Full path of cached file
@@ -20,17 +20,35 @@ class Cache {
     protected $useCachedFile; // If true, will render cache file
     protected $fullCacheFilePath;
     
-    public function __construct($fullPath) {
-        //init
+    public function __construct() {
         $this->messages = array();
-        $this->messages[] = "--- Cache Class Verbose --- ";
+        $created = date("Y-m-d H:i:s", time());
+        $this->messages[] = "--- Cache Class Verbose ---";
+        $this->messages[]  = " -- cache executed: $created -- ";
+        file_put_contents(CACHE_PATH . "/output.html", "");
+    }
+    /**
+     * Initialize the Cache object to deal with a file
+     * @param string $fullPath Path ( full or relative ) to the file
+     * @param string $lang Two letters code of the language, like es,en etc
+     */
+    public function init($fullPath, $lang) {
+        
         $this->messages[] = "Cache Lifetime: " . CACHE_SECONDS_LIFETIME . "";
         $this->useCachedFile = false;
         $this->updateCacheFile = false;
         
         $filename = basename($fullPath);
-        $this->fileHash = sha1($fullPath . $_SERVER['REQUEST_URI']) . "_" . $filename;
-        $this->fullCacheFilePath = APPLICATION_PATH . "/cache/" . $this->fileHash;
+        $this->fileHash = substr(sha1( $fullPath ), 0, 8) . "_" . $filename;
+        $subfolder = $this->fileHash[0]; // accessing first char of string
+        $this->fullCacheFilePath = CACHE_PATH . "/$lang/$subfolder/" . $this->fileHash;
+        
+        if(!file_exists(CACHE_PATH . "/$lang")){
+            mkdir(CACHE_PATH . "/$lang", 0744);
+        }
+        if(!file_exists(CACHE_PATH . "/$lang/$subfolder")){
+            mkdir(CACHE_PATH . "/$lang/$subfolder", 0744);
+        }
         
         $this->messages[] = "Request URI: " . $_SERVER['REQUEST_URI'];
         
@@ -50,21 +68,14 @@ class Cache {
             $this->updateCacheFile = true;
             $this->messages[] = "File $fullPath DOES NOT EXIST as " . $this->fileHash;
         }
-        
-        
-        
     }
+    
     /**
      * Get if we're going to use the cache file, to be tested outside class.
      * @return boolean True if we're going to use the cache file, false otherwise
      */
     public function useCacheFile(){
-        if(LOCAL_WITH_LOCALHOST){
-            return false;
-        }else{
-            return $this->useCachedFile;
-        }
-        
+        return $this->useCachedFile;
     }
     /**
      * Get the file cached contents
@@ -76,7 +87,7 @@ class Cache {
     }
     
     /**
-     * 
+     * Saves the cached content to a file
      * @param string $content The html render of the file to cache
      */
     public function saveCacheFile($content){
@@ -122,7 +133,7 @@ class Cache {
      */
     public function saveMessagesToFile(){
         $mess = $this->getMessages();
-        file_put_contents(APPLICATION_PATH . "/cache/output.html", $mess);
+        file_put_contents(CACHE_PATH . "/output.html", $mess, FILE_APPEND);
     }
     
     

@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 /**
  * 
@@ -12,5 +12,11 @@
  */
 
 //$oRender = new PageRender('es', 'es_ES');
+$lang = Tau::getInstance()->getLang();
+TauResponse::addHeader($_SERVER["SERVER_PROTOCOL"]." 404 Not Found");
 
-echo "<h1>404 Not found</h1>";
+switch($lang){
+    case 'es': echo "<h1>404 Página no encontrada</h1>"; break;
+    case 'en': echo "<h1>404 Not found</h1>"; break;
+    default: echo "<h1>404 Page Not found</h1>";
+}

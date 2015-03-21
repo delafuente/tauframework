@@ -6,6 +6,15 @@ TauFramework usage example
     <head>
         <title>Tau Framework page</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <!--<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>-->
+        
+          <script type="text/javascript" src="/js/tau/jquery-ui-1.11.4/external/jquery/jquery.js"></script>
+          <script type="text/javascript" src="/js/tau/jquery-ui-1.11.4/jquery-ui.min.js"></script>
+          <script type="text/javascript" language="javascript" src="/js/tau/dp/datepicker-{replace_lang}.js" ></script>
+          <link rel="stylesheet" href="/js/tau/jquery-ui-1.11.4/jquery-ui.min.css" />
+          <style>
+              .ui-widget { font-size: 12px; }
+          </style>
     </head>
     <body>
         <div><p>Tau Framework sample page</p></div>
@@ -14,8 +23,10 @@ TauFramework usage example
         <div class="formContainer">
             {replace_frm_test}
         </div>
-        <script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-        <script type="text/javascript" language="javascript" src="js/tau/validation.js" ></script>
-              
+          
+          <!--<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.7.2/i18n/jquery-ui-i18n.min.js"></script>-->
+          <script type="text/javascript" language="javascript" src="/js/tau/validation.js" ></script>
+          <!--<script type="text/javascript" language="javascript" src="/js/tau/dp/datepicker-{replace_lang}.js" ></script>-->
+          <link rel="stylesheet" href="css/tau_validation/tau_validation.css" />
     </body>
 </html>

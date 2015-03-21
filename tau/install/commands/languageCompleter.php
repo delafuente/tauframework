@@ -1,3 +1,6 @@
+
+<link rel="icon" type="image/png" href="/tau32g.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/tau64g.png" sizes="64x64">
 <?php
 session_start();
 /**

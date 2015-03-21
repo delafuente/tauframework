@@ -38,15 +38,19 @@ $replace_in_local = false;
 $create_sql = false;
 $execute_sql = false;
 $full_filename = false;
+$relativeFileName = false;
 
 $inputs = json_decode($_POST['frmData'], true);
 $mainData = array();
-$createSqlTemplate = "insert into tau_translations(lang,t_group,item,content) values \n";
+$createSqlTemplate = "insert ignore into tau_translations(lang,t_group,item,content) values \n";
 $updateSqlTemplate = "update tau_translations set content='rep_content' where lang='rep_lang' and t_group='rep_group' and item='rep_item' limit 1;\n";
+$rollbackSqlTemplate = "delete from tau_translations where lang='rep_lang' and t_group='rep_group' and item='rep_item' limit 1;\n";
 $createSQL = "";
 $updateSQL = array();
 $repUpdate = array('rep_content', 'rep_lang', 'rep_group', 'rep_item');
+$repRollback = array('rep_lang', 'rep_group', 'rep_item');
 $someInputIsNew = false;
+$rollbackSentences = array();
 
 foreach ($inputs as $input) {
     //file_put_contents("output.txt", $input['name'] . "\n", FILE_APPEND);
@@ -80,9 +84,20 @@ foreach ($inputs as $input) {
         if ($_SESSION['tokensFound'][$lang][$name] != $content) {
             if ($isNew) {
                 $someInputIsNew = true;
-                $createSQL .= "('$lang','$group','$name','" . addslashes($content) . "'),\n";
+                $createSQL .= "('$lang','$group','$name','" . $db->escape($content) . "'),\n";
+                $rollbackSentences[] = str_replace(
+                                    $repRollback, 
+                                    array($lang, $group, $name), 
+                                    $rollbackSqlTemplate
+                                    );
             } else {
-                $updateSQL[] = str_replace($repUpdate, array(addslashes($content), $lang, $group, $name), $updateSqlTemplate);
+                $updateSQL[] = str_replace($repUpdate, array($db->escape($content), $lang, $group, $name), $updateSqlTemplate);
+                $currentContent = $db->getVar(
+                        "select content from tau_translations".
+                        " where lang='$lang' and t_group='$group' ".
+                        "and item='$name' limit 1;"
+                        );
+                $rollbackSentences[] = str_replace($repUpdate, array($db->escape($currentContent), $lang, $group, $name), $updateSqlTemplate);
             }
         }
 
@@ -90,6 +105,10 @@ foreach ($inputs as $input) {
 
         //file_put_contents("output.txt", "++ name:$name num:$num lang:$lang group:$group isNew:$isNew content:$content" . "\n", FILE_APPEND);
     }
+}
+
+if($full_filename){
+    $relativeFileName = str_replace(APPLICATION_PATH, "", $full_filename);
 }
 
 $createSQL = $createSqlTemplate . trim($createSQL, ",\n") . ";\n";
@@ -105,14 +124,40 @@ if ($someInputIsNew) {
     $mainSQLArray[] = $createSQL;
 }
 
-if ($execute_sql) {
+$user = strtolower(str_replace("\$","", getenv("username")));
+$curTime = time();
+if($user == ""){
+    $user = get_current_user();
+}
+if($user == ""){
+    $user = 'unknown';
+}
+$when = date("Y-m-d H:i:s", $curTime);
+$dateFormatted = date("Ymd", $curTime);
+$timeFormatted = date("His", $curTime);
 
+$migrateName = $dateFormatted . "_" . 
+$timeFormatted . "_translations_" . Tau::tau_get_group($relativeFileName); 
+
+$fileToWriteOn = MIGRATES_FOLDER . "/" . $migrateName . ".sql"; 
+
+if ($execute_sql) {
+    
+    $mainSQLArray['migrates'] = "insert into migrates (name,author,created,applied) values".
+            "('$migrateName','$user','$when','$when');";
+    
+    $rollbackSentences['migrates'] = "delete from migrates where name='$migrateName' limit 1;";
+    
     $result = $db->makeTransaction($mainSQLArray);
 
+    unset( $mainSQLArray['migrates'] );
+    
     if ($result) {
         $operations['execute_sql'] = array("success", "SQL insertion OK");
     } else {
         $operations['execute_sql'] = array("error", $db->getLastErrorMessage());
+        $db->makeTransaction($rollbackSentences);
+        unset( $rollbackSentences['migrates'] );
     }
 } else {
     $operations['execute_sql'] = array("not_required");
@@ -124,22 +169,36 @@ if ($create_sql) {
     $operations['create_sql'] = array("not_required");
 }
 
-if($needToSave && defined('SAVE_GENERATED_SQL_FOLDER') && strlen(SAVE_GENERATED_SQL_FOLDER) > 3){
+if($needToSave && defined('MIGRATES_FOLDER') && strlen(MIGRATES_FOLDER) > 3){
     
-   
-    $fileToWriteOn = SAVE_GENERATED_SQL_FOLDER . "/" . Tau::tau_get_group($full_filename) . "_" . time() . ".sql";
-    
-    $saveSQL = "-- TauFramework auto-generated sql to modify translations \n";
-    $saveSQL .= "-- generated on " . date("Y-m-d H:m:s",time()) . " \n\n";
-    
+    $saveSQL = "-- $user@$when\n\n";
+    $rollbackSQL = "-- rollback file from $user@$when\n\n";
+    $totSentences = count($mainSQLArray);
+    $counter = 0;
     foreach ($mainSQLArray as $sqlSentence){
-        $saveSQL .= $sqlSentence . "\n";
+        $counter++;
+        $saveSQL .= $sqlSentence . "\n\n";
+        if($counter != $totSentences){
+            $saveSQL .= SQL_SPLIT . "\n\n";
+        }
     }
-    if(!is_writable(SAVE_GENERATED_SQL_FOLDER)){
-        @chmod(SAVE_GENERATED_SQL_FOLDER, 777);
+    
+    $totSentences = count($rollbackSentences);
+    $counter = 0;
+    foreach ($rollbackSentences as $sqlSentence){
+        $counter++;
+        $rollbackSQL .= $sqlSentence . "\n\n";
+        if($counter != $totSentences){
+            $rollbackSQL .= SQL_SPLIT . "\n\n";
+        }
     }
-    if(file_exists(SAVE_GENERATED_SQL_FOLDER) && is_writable(SAVE_GENERATED_SQL_FOLDER)){
+    
+    if(!is_writable(MIGRATES_FOLDER)){
+        @chmod(MIGRATES_FOLDER, 777);
+    }
+    if(file_exists(MIGRATES_FOLDER) && is_writable(MIGRATES_FOLDER)){
         file_put_contents($fileToWriteOn,$saveSQL);
+        file_put_contents(str_replace(".sql", "_rollback.sql", $fileToWriteOn), $rollbackSQL);
     }
     
 }

@@ -31,6 +31,8 @@ class InputValidator {
     protected $redirectOnErrors;
     protected $db; // DataManager object
     protected $languageLoader; //LanguageLoader object
+    protected static $localization;
+    protected $mysqlDates = false; //date gets Y-m-d to be sanely inserted in mysql
     /**
      * Creates an InputValidator object
      * @param type $inputArray The array to clean, normally $_GET,$_POST or $_REQUEST
@@ -39,6 +41,7 @@ class InputValidator {
      */
 
     function __construct($inputArray, $redirectOnErrors = true, $dataManager = false) {
+        
         $this->inputArray = $inputArray;
         $this->numInputs = count($this->inputArray);
         $this->isCorrect = true;
@@ -51,28 +54,73 @@ class InputValidator {
             $this->db = DataManager::getInstance();
         }
         $this->languageLoader = LanguageLoader::getInstance();
-        $labels = $this->languageLoader->getTranslations('lang_labels', APPLICATION_BASE_URL, Tau::getInstance()->getLang());
+        $labelsArr = $this->languageLoader->getTranslations('lang_labels', APPLICATION_BASE_URL, Tau::getInstance()->getLang());
+        $labels = array();
+        $validationTextsResult = $this->languageLoader->getTranslations('js_validation', APPLICATION_BASE_URL, Tau::getInstance()->getLang());
+        $validationTexts = array();
         
-        foreach($labels as $elem){ $inputArray[$elem['item']] = $elem['content']; }
+        foreach($labelsArr as $elem){ $labels[$elem['item']] = $elem['content']; }
+        foreach($validationTextsResult as $elem){ $validationTexts[$elem['item']] = $elem['content']; }
+        
+        if(empty($inputArray)){
+            $this->redirectToError($labels['FRM_YET_RECEIVED']);
+        }
         
         $inputArray = $this->db->escape($inputArray);
-
+        
+        $localization = unserialize( TauResponse::getCookie('localization') );
+        if(!$localization){
+            $loc = $this->db->getRow("select * from tau_localization where name='"
+                .strtoupper(Tau::getInstance()->getLang()). "' limit 1;");
+            
+            self::$localization = $loc;
+            TauResponse::setCookie(
+                    'localization', 
+                    serialize($loc), 
+                    SECONDS_ONE_YEAR, 
+                    LU_COOKIE_PATH, 
+                    LU_COOKIE_DOMAIN);
+        }
+        
+        if(!empty($_FILES)){
+            foreach($_FILES as $nFile => $eFile){
+                $inputArray[$nFile] = $eFile['name'];
+            }
+        }
+        
+        /* Apply validation rules specified when creating the form, and 
+         * redirect to error page if we find something.
+         * This validation is yet performed by javascript in client side, so
+         * if we get some error here, it could be a hack attempt. */
+        if(!empty($_POST)){
+            $this->applyFormRules($inputArray, $validationTexts);
+        }
+        
+        /* Put all dates in Y-m-d format */
+        if($this->mysqlDates){
+            foreach($this->mysqlDates as $field => $date){ $inputArray[$field] = $date; }
+        }
+        
+        
         /* Check the form is not posted twice */
         if (isset($inputArray['form_hash']) && !ALLOW_FORM_DATA_REFRESH ) {
-
 
             if (TauSession::get('last_form_hash') && (TauSession::get('last_form_hash') == $inputArray['form_hash'])) {
                 $texto .= $labels['FRM_YET_RECEIVED'];
                 $this->errors['repeatedForm'] = $texto;
                 $this->redirectToError($texto);
             } else {
-                TauSession::get('last_form_hash', $inputArray['form_hash']);
+                TauSession::put('last_form_hash', $inputArray['form_hash']);
             }
         }
 
         /* Check reCaptcha code, if any */
         if (isset($inputArray['recaptcha_challenge_field'])) {
-            $this->reCaptchaResponse = recaptcha_check_answer(RECAPTCHA_PRIVATE_KEY, $_SERVER["REMOTE_ADDR"], $inputArray["recaptcha_challenge_field"], $inputArray["recaptcha_response_field"]);
+            $this->reCaptchaResponse = recaptcha_check_answer(
+                    RECAPTCHA_PRIVATE_KEY, 
+                    $_SERVER["REMOTE_ADDR"], 
+                    $inputArray["recaptcha_challenge_field"], 
+                    $inputArray["recaptcha_response_field"]);
             $this->hasReCaptcha = true;
 
             if (!$this->reCaptchaResponse->is_valid) {
@@ -89,14 +137,163 @@ class InputValidator {
             $this->hasReCaptcha = false;
         }
 
-
-
-
         foreach ($inputArray as $key => $value) {
             $this->inputArray[$key] = $this->validateGeneral($value);
         }
     }
 
+    protected function applyFormRules( array $input, array $validationTexts ){
+        
+        $hash = $input['form_hash'];
+        $valNames = TauSession::get("validationFor_$hash"."_names") ;
+        $valRules = TauSession::get("validationFor_$hash"."_rules") ;
+        $aNames = explode(",", $valNames);
+        $aRules = explode(",", $valRules);
+        $i = -1;
+        
+        foreach ($aNames as $fieldName){
+            $i++;
+            if($aRules == "" || $aRules[$i] == 'o' || $aRules[$i] == ""){
+                continue;
+            }
+            $rules = explode("|", $aRules[$i]);
+            if(!isset($input[$fieldName]) && !PRODUCTION_ENVIRONMENT){
+                
+                    die("TauFramework::InputValidator: Not found input[$fieldName], remember ".
+                        " that the field name must be the same ".
+                        "as the id of the field. You can also set the name ".
+                        "parameter as 'false' when creating the field aRules:" . $aRules[$i] );
+                
+                
+            }
+            $this->validateField(
+                    $fieldName, 
+                    $input[$fieldName], 
+                    $rules,
+                    $validationTexts,
+                    $input
+                    );
+        }
+    }
+    
+    protected function validateField( 
+            $fieldName, 
+            $fieldValue, 
+            array $rules, 
+            array $validationTexts, 
+            array $input){
+        
+        $i = 0;
+        $initCounter = 0;
+        $totRules = count($rules);
+        
+        if($rules[0] != "o"){
+            if($fieldValue == ""){
+                $this->redirectToError($validationTexts['required']);
+            }
+        }else{
+            if($totRules > 0){
+                $initCounter = 1;
+            }
+        }
+        
+        for( $i = $initCounter; $i < $totRules; $i++ ){
+            $ruleName = "";
+            $ruleValue = "";
+            
+            if($fieldValue == "" && $rules[0] == "o"){
+                continue;
+            }
+            if(strpos($rules[$i], ":") !== false){
+                $ruleArr = explode(":", $rules[$i]);
+                $ruleName = $ruleArr[0];
+                $ruleValue = $ruleArr[1];
+            }else{
+                $ruleName = $rules[$i];
+            }
+        
+            if(!isset($ruleName) && !PRODUCTION_ENVIRONMENT){
+                die("TauFramework: not set ruleName for field: $fieldName");
+            }
+            switch ($ruleName){
+
+                case '*':
+                    if($fieldValue == ""){
+                        $this->redirectToError($validationTexts['required']);
+                    }
+                    break;
+                case 'a':
+                    if( !InputValidator::validateAlphanum($fieldValue, '_') ){
+                        $this->redirectToError($validationTexts['alphanum'] . ": $fieldValue");
+                    }
+                    break;
+                case 'aex':
+                    if( !InputValidator::validateAlphanum($fieldValue, "áéíóúÁÉÍÓÚäëïöüÄËÏÖÜàèìòùÀÈÌÒÙçÇ_-ß")){
+                        $this->redirectToError($validationTexts['bad_chars'] . ": $fieldValue");
+                    }
+                    break;
+                case 'e':
+                    if( !filter_var($fieldValue, FILTER_VALIDATE_EMAIL)){
+                        $this->redirectToError($validationTexts['email'] . ": $fieldValue");
+                    }
+                    break;
+                case 'url':
+                    if( !filter_var($fieldValue, FILTER_VALIDATE_URL)){
+                        $this->redirectToError($validationTexts['url'] . ": $fieldValue");
+                    }
+                    break;
+                case 'num':
+                    if( !InputValidator::validateNum($fieldValue)){
+                        $this->redirectToError($validationTexts['only_numeric'] . ": $fieldValue");
+                    }
+                    break;    
+                case 'int':
+                    if( !filter_var($fieldValue, FILTER_VALIDATE_INT)){
+                        $this->redirectToError($validationTexts['only_integer'] . ": $fieldValue");
+                    }
+                    break;
+                case 'min':
+                    if( !InputValidator::validateNum($fieldValue, $ruleValue)){
+                        $endText = str_replace("rpl_param", $ruleValue, $validationTexts['min_value']);
+                        $this->redirectToError($endText . ": $fieldValue");
+                    }
+                    break;
+                case 'max':
+                    if( !InputValidator::validateNum($fieldValue, false, $ruleValue)){
+                        $endText = str_replace("rpl_param", $ruleValue, $validationTexts['max_value']);
+                        $this->redirectToError($endText . ": $fieldValue");
+                    }
+                    break;
+                case 'ml':
+                    if( strlen($fieldValue) < $ruleValue){
+                        $endText = str_replace("rpl_param", $ruleValue, $validationTexts['not_enough_chars']);
+                        $this->redirectToError($endText . ": $fieldValue");
+                    }
+                    break;
+                case 'Ml':
+                    if( strlen($fieldValue) > $ruleValue){
+                        $endText = str_replace("rpl_param", $ruleValue, $validationTexts['too_much_chars']);
+                        $this->redirectToError($endText . ": $fieldValue");
+                    }
+                    break;
+                case 'et':
+                    if( $fieldValue != $input[$ruleValue]){
+                        $this->redirectToError($validationTexts['not_equals_to'] . ": $fieldValue");
+                    }
+                    break;
+                case 'dt':
+                    $currentDate = InputValidator::validateDate($fieldValue);
+                    if( !$currentDate ){
+                        $this->redirectToError($validationTexts['bad_date'] . ": $fieldValue");
+                    }else{
+                        $this->mysqlDates[$fieldName] = $currentDate;
+                    }
+                    break;
+
+            }
+        
+        }
+    }
     public function allFieldsCorrect() {
         return $this->isCorrect;
     }
@@ -104,7 +301,7 @@ class InputValidator {
     protected function redirectToError($message) {
         if ($this->redirectOnErrors) {
             TauSession::put('last_error', $message);
-            header("Location: " .APPLICATION_BASE_URL . "/". APP . "/error/");
+            header("Location: " .APPLICATION_BASE_URL . "/". Tau::getInstance()->getLang() . "/error/");
             die();
         }
     }
@@ -134,8 +331,8 @@ class InputValidator {
     }
 
     public static function validateAlphanum($string, $extraAllowedChars) {
-
-        return preg_match('/^[a-zA-Z0-9áéíóúÁÉÍÓÚäëïöüÄËÏÖÜàèìòùÀÈÌÒÙçÇ' . $extraAllowedChars . ']+$/', $string);
+        
+        return preg_match('/^[a-zA-Z0-9' . $extraAllowedChars . ']+$/', $string);
     }
 
     public static function validateString($value, $minLength = false, $maxLength = false, $allowedChars = false, $notAllowedChars = false) {
@@ -172,8 +369,56 @@ class InputValidator {
         return true;
     }
 
+    public static function getDateSeparator($date, $sep = "/,-,., "){
+        
+        $separators = explode(",", $sep);
+        
+        foreach($separators as $splitter){
+          if(strpos($date, $splitter) !== false){
+              return $splitter;
+          }  
+        }
+        return false;
+    }
+    
+    public static function getPosition($data, $format){
+        if($data[0] == $format){
+            return 0;
+        }else if($data[1] == $format){
+            return 1;
+        }else{
+            return 2;
+        }
+    }
+    
     public static function validateDate($date) {
         
+        $separator = self::getDateSeparator($date);
+
+        if($separator == ""){
+            return false;
+        }
+        
+        $valid_date = self::$localization['date_format'];
+        $canonSep = self::getDateSeparator($valid_date);
+        
+        $vdat = explode($canonSep, trim($valid_date));
+        
+        $yearPos  = self::getPosition( $vdat, 'yy' );
+        $monthPos = self::getPosition( $vdat, 'mm' );
+        $dayPos   = self::getPosition( $vdat, 'dd' );
+
+        $dt  = explode($separator, $date);
+        
+        if (count($dt) == 3) {
+            if (checkdate($dt[$monthPos], $dt[$dayPos], $dt[$yearPos])) {
+                return $dt[$yearPos]."-".$dt[$monthPos]."-".$dt[$dayPos];
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     public function validateGeneral($str) {

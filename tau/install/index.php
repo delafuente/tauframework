@@ -13,6 +13,9 @@
 define('__ROOT__', str_replace("\\","/",dirname(dirname(__FILE__))) );
 
 ?>
+<head>
+    <link rel="icon" type="image/png" href="/tau32g.png" sizes="32x32">
+    <link rel="icon" type="image/png" href="/tau64g.png" sizes="64x64">
 <style>
     body{
         color: rgb(90, 90, 90);
@@ -37,6 +40,8 @@ define('__ROOT__', str_replace("\\","/",dirname(dirname(__FILE__))) );
     h3,h4{ margin:0px;}
     .constant{ color:#a901db; }
 </style>
+</head>
+<body>
 <div class="main">
     <h3>Welcome to &tau;&alpha;&upsilon; installation</h3>
    
@@ -81,3 +86,4 @@ function terminate(){
 }
 
 ?>
+</body>

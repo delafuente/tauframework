@@ -13,6 +13,7 @@ require_once("config.php");
 require_once("Replacer.php");
 require_once( APPLICATION_PATH . "/tau/Tau.php");
 require_once( APPLICATION_PATH . "/tau/inc/LanguageLoader.php");
+require_once( APPLICATION_PATH . "/tau/inc/TauCache.php");
 
 class PageRender {
 
@@ -21,15 +22,13 @@ class PageRender {
     protected $description;
     protected $lang; // like es
     protected $lang_code; // like es_ES
-    //Widgets
-    protected $headlineWidget;
-    protected $breakingNewsWidget;
-    protected $friendsWidget;
-
+    protected $cache;
+    protected $emptyReplacer;
     /**
      * Creates a new PageRender, to process template additions.
      * @param string $lang Language, like es
      * @param string $lang_code Language code, like es_ES
+     * @param boolean $testMode If true, will use cache even in localhost
      */
 
     public function __construct($lang, $lang_code) {
@@ -43,7 +42,9 @@ class PageRender {
         $this->last_id = -1;
         $this->description = APPLICATION_NAME;
         $this->lang = $lang;
-        $this->lang_code = $lang_code;
+        $this->lang_code = $lang_code;        
+        $this->cache = new TauCache();
+        $this->emptyReplacer = new Replacer();
         
         $this->headlineWidget = false;
         $this->breakingNewsWidget = false;
@@ -61,26 +62,39 @@ class PageRender {
      * Load text from a file, and parses it with a Replacer
      * @param string $filename The path to filename.
      * @param Replacer $replacer A Replacer object to replace text.
-     * @param int $id Optional id of the array, be aware to not unconscious overwrite
+     * @param boolean $cacheActive If true, will use cache
      * other slot's id
      */
-    public function loadFile($filename, Replacer $replacer, $id = false) {
-
+    public function loadFile($filename, Replacer $replacer, $cacheActive = false) {
+        
+        $id = false;
+        if( $cacheActive ){
+            $this->cache->init($filename, $this->lang);
+            if( $this->cache->useCacheFile() ){
+                $this->addContent( $this->cache->getCacheFile(), $this->emptyReplacer, $id);
+                return false;
+            }
+        }
+        
+        
         try {
             $text = file_get_contents($filename);
             $replacer->addLanguageFile($this->getTranslationGroup($filename), APPLICATION_BASE_URL, $this->lang);
-            $this->addContent($text, $replacer, $id);
+            $slotId = $this->addContent($text, $replacer, $id);
             if ($text = "") {
                 throw new Exception("Cannot open filename " . $filename);
             }
+            if( $cacheActive ){
+                $this->cache->saveCacheFile( $this->getSlot( $slotId ) );
+            }
+            
         } catch (Exception $ex) {
             if (DEBUG_MODE) {
                 error_log("PageRender.php - loadFile() - Exception trying to open " . $filename);
                 return $ex->getMessage();
             } else {
-                sendSimpleMail(ERROR_MAIL, ERROR_RECIPIENT_MAIL, "FATAL ERROR in " . APPLICATION_NAME, "PageRender.php - getStringFromFile() - Exception trying to open " . $filename);
-                return "Error in server : Perhaps we are into maintenance, if the problem persists please contact " .
-                        WEBMASTER_MAIL . " and explain where do you find this error.";
+                $this->sendErrorMail($filename);
+                return $this->returnErrorMessage();
             }
         }
     }
@@ -90,62 +104,127 @@ class PageRender {
      * parsing or formatting. Intended to use it later with addContent()
      * @param String $filename The path to filename
      * @param Replacer $replacer An optional replacer to parse the text before return
+     * @param boolean $cacheActive If true, will use cache
      * @return String The contents of the file.
      */
-    public function getStringFromFile($filename, Replacer $replacer = null) {
+    public function getStringFromFile($filename, Replacer $replacer = null, $cacheActive = false) {
+        
+        if( $cacheActive ){
+            $this->cache->init($filename, $this->lang);
+            if( $this->cache->useCacheFile() ){
+                return $this->cache->getCacheFile();
+            }
+        }
+        $returnText = "";
+        
         try {
             $text = file_get_contents($filename);
             if ($text == "") {
                 throw new Exception("Cannot open filename " . $filename);
             }
         } catch (Exception $ex) {
+            
             $message = "PageRender.php - getStringFromFile() - Exception trying to open " . $filename;
 
             if (DEBUG_MODE) {
                 error_log($message);
                 return $ex->getMessage();
             } else {
-                sendSimpleMail(ERROR_MAIL, ERROR_RECIPIENT_MAIL, "FATAL ERROR in " .APPLICATION_NAME , "PageRender.php - getStringFromFile() - Exception trying to open " . $filename);
-                return "Error in server : Perhaps we are into maintenance, if the problem persists please contact " .
-                        WEBMASTER_MAIL . " and explain where do you find this error.";
+                $this->sendErrorMail( $filename );
+                return $this->returnErrorMessage();
             }
         }
         if ($replacer != null) {
             $replacer->addLanguageFile($this->getTranslationGroup($filename), APPLICATION_BASE_URL, $this->lang);
-            return $replacer->filter($text);
+            $returnText = $replacer->filter($text);    
         } else {
-            return $text;
+            $returnText = $text;
         }
+        if( $cacheActive ){
+            $this->cache->saveCacheFile( $returnText );
+        }
+        return $returnText;
     }
 
     /**
      * Get the output of a php file in a string
-     * @param string Url to file
+     * @param string $filename Path of the file
      * @param Replacer $replacer An optional replacer to parse the text before return
+     * @param boolean $cacheActive If true, will use cache
      * @return string The php file executed contents
      */
-    function loadPhpFile($file, Replacer $replacer = null) {
-        if (!is_file($file) || !file_exists($file) || !is_readable($file))
+    function getStringFromPhpFile($filename, Replacer $replacer = null, $cacheActive = false) {
+        
+        if( $cacheActive ){
+            $this->cache->init($filename, $this->lang);
+            if( $this->cache->useCacheFile() ){
+                return $this->cache->getCacheFile();
+            }
+        }
+        $returnText = "";
+        
+        if (!is_file($filename) || !file_exists($filename) || !is_readable($filename)){
             return false;
+        }
+            
         ob_start();
-        include($file);
+        include($filename);
         $contents = ob_get_contents();
         ob_end_clean();
         
         if ($replacer != null) {
             $replacer->addLanguageFile($this->getTranslationGroup($filename), APPLICATION_BASE_URL, $this->lang);
-            return $replacer->filter($contents);
+            $returnText =  $replacer->filter($contents);
         } else {
-            return $contents;
+            $returnText = $contents;
         }
+        
+        if( $cacheActive ){
+            $this->cache->saveCacheFile( $returnText );
+        }
+        
+        return $returnText;
     }
 
+     /**
+     * Load php output in PageRender slot
+     * @param string $filename Path to filename
+     * @param Replacer $replacer An optional replacer to parse the text before return
+     * @param boolean $cacheActive If true, will use cache
+     */
+    function loadPhpFile($filename, Replacer $replacer, $cacheActive = false) {
+        
+        if( $cacheActive ){
+            $this->cache->init($filename, $this->lang);
+            if( $this->cache->useCacheFile() ){
+                $this->addContent( $this->cache->getCacheFile(), $this->emptyReplacer);
+                return false;
+            }
+        }
+        
+        if (!is_file($filename) || !file_exists($filename) || !is_readable($filename)){
+            return false;
+        }
+            
+        ob_start();
+        include($filename);
+        $contents = ob_get_contents();
+        ob_end_clean();
+        
+        $replacer->addLanguageFile($this->getTranslationGroup($filename), APPLICATION_BASE_URL, $this->lang);
+        $slotId = $this->addContent($contents, $replacer);
+        
+        if( $cacheActive ){
+                $this->cache->saveCacheFile( $this->getSlot( $slotId ) );
+        }
+    }
+    
     /**
      * Load text and parses it with a Replacer object.
      * @param string $text the text or html to be inserted in the page
      * @param Replacer $replacer A replacer to replace text.
      * @param int $id Optional id of the array, be aware to not unconscious overwrite
-     * other slot's id
+     * @return int The slot id, to be retrieved by cache or by getSlot(id)
      */
     public function addContent($text, Replacer $replacer, $id = false) {
 
@@ -158,30 +237,13 @@ class PageRender {
             }
         }
         $this->pageSlots[$id] = $replacer->filter($text);
+        return $id;
     }
 
     public function setDescription($description) {
         $this->description = $description;
-    }
+    }  
     
-    public function addHeadlineWidget(){       
-        $this->headlineWidget = true;
-    }
-    public function addBreakingNewsWidget(){
-        $this->breakingNewsWidget = true;
-    }
-    public function addFriendsWidget(){
-        $this->friendsWidget = true;
-    }
-    protected function getHeadlineWidget(){
-        return $this->loadPhpFile(APPLICATION_PATH . "/controllers/".APP_SLUG."/headlineWidget.php");
-    }
-    protected function getBreakingNewsWidget(){
-        return $this->loadPhpFile(APPLICATION_PATH . "/controllers/".APP_SLUG."/breakingNewsWidget.php");
-    }
-    protected function getFriendsWidget(){
-        return $this->loadPhpFile(APPLICATION_PATH . "/controllers/".APP_SLUG."/friendsWidget.php");
-    }
     /**
      * Get the slot contents, yet parsed. This method is not commonly used,
      * you can get it to parse outside and then use addContent with the same id
@@ -213,7 +275,6 @@ class PageRender {
             }
         }
 
-        $endPage = str_replace("replace_form_hash", uniqid(), $endPage);
         $endPage = str_replace("replace_urlbase", APPLICATION_BASE_URL, $endPage);
         $endPage = str_replace("replace_base_url", APPLICATION_BASE_URL, $endPage);
         //Prevent this values not being overriden before
@@ -225,34 +286,6 @@ class PageRender {
         $endPage = str_replace("{replace_app}",APP,$endPage);
         $endPage = str_replace("{replace_lang}",$this->lang,$endPage);
         
-        if($this->headlineWidget === true){
-            
-            $endPage = str_replace("{replace_headline}",$this->getHeadlineWidget(),$endPage);
-        }else{
-            
-            $endPage = str_replace("{replace_headline}","",$endPage);
-        }
-        
-        if($this->breakingNewsWidget === true){
-            
-            $endPage = str_replace("{replace_breaking_news}",$this->getBreakingNewsWidget(),$endPage);
-        }else{
-            
-            $endPage = str_replace("{replace_breaking_news}","",$endPage);
-        }
-        
-        if($this->friendsWidget === true){
-            
-            $endPage = str_replace("{replace_friends_widget}",$this->getFriendsWidget(),$endPage);
-        }else{
-            
-            $endPage = str_replace("{replace_friends_widget}","",$endPage);
-        }
-        
-        
-        //Validation texts
-        //$validation_text = $this->getStringFromFile(APPLICATION_PATH . "/js/lang/" . $this->lang_code . "/lang_validation.js");
-        
         $js_validation = LanguageLoader::getInstance()->getTranslations("js_validation", APPLICATION_BASE_URL, $this->lang);
         $validation_text = "var tau_validation = new Array();\n";
         
@@ -262,15 +295,36 @@ class PageRender {
                 $validation_text .= "tau_validation['$js_key'] = \"$js_val\";\n";
         }
         //Constants
-        $constants = "const APP_BASE_URL='" . APPLICATION_BASE_URL . "';\n";
+        $constants  = "const APP_BASE_URL='" . APPLICATION_BASE_URL . "';\n";
         $constants .= "const LANG='" . $this->lang . "';\n";
-        $endPage = str_replace("<head>","<head>\n\n<script language='javascript'>\n\n" . $validation_text . "\n" .$constants. "\n\n</script>\n\n",$endPage);
+        $constants .= "const SPAN_ERROR_CLASS='" . SPAN_ERROR_CLASS . "';\n";
+        $constants .= "const FIELD_ERROR_CLASS='" . FIELD_ERROR_CLASS . "';\n";
+        $endPage = str_replace("<head>","<head>\n\n<script language='javascript'>\n\n" . 
+                $validation_text . "\n" .$constants. "\n\n</script>\n\n",$endPage);
+        
+        if(USE_TAU_CACHE && VERBOSE_MODE){
+            $this->cache->saveMessagesToFile();
+        }
         
         Tau::getInstance()->hookAfterRender();
         
         return $endPage;
     }
 
+    protected function sendErrorMail( $filename ){
+        sendSimpleMail(
+                ERROR_MAIL, 
+                ERROR_RECIPIENT_MAIL, 
+                "FATAL ERROR in " .APPLICATION_NAME , "PageRender.php - ".
+                "getStringFromFile() - Exception trying to open " . $filename
+                );
+    }
+    protected function returnErrorMessage(){
+        return "<p>Error in server : Perhaps we are into maintenance, ".
+                "if the problem persists please contact <a href='mailto:" .
+                WEBMASTER_MAIL . "'>". WEBMASTER_MAIL."</a> and try to explain".
+                " where and how you've found this error.</p>";
+    }
     /**
      * Magic method, called from functions which try to print this object.
      * @return string See toString()

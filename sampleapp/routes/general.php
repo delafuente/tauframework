@@ -16,5 +16,6 @@ $urlMap = array(
     //'/([a-z]{2})/' => 'controllers/index/index.php',
     '/404/' => 'controllers/general/404.php',
     '/error/' => 'controllers/general/error.php',
-    '/media\/search\-(.*)\/(.*)/' => 'controllers/general/login.php'
+    '/media\/search\-(.*)\/(.*)/' => 'controllers/general/login.php',
+    '/frmtest/' => 'controllers/test/frmTest.php',
 );
