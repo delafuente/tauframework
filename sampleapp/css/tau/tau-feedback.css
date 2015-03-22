@@ -1,0 +1,59 @@
+/* 
+    Created on : 22-mar-2015, 14:30:49
+    Author     : lucas
+*/
+
+.tau-see-log{
+    display: none;
+    z-index: 999999 !important;
+    font-family: monospace, serif;
+    font-size: 1em;
+    width: 100%;
+    overflow-y: scroll;
+    height: 100%;
+    margin:5px;
+    margin-top:35px;
+    
+}
+
+.tau-see-loaded-templates{
+    z-index: 999999 !important;
+    width: 90%;
+    margin:5px;
+    padding:3px; 
+    border:1px #006dcc solid;
+}
+
+.tau-see-executed-queries{
+    z-index: 999999 !important;
+    width: 90%;
+    margin:5px;
+    padding:3px;    
+    border:1px #006dcc solid;
+}
+
+.tau-see-loaded-templates p{
+    z-index: 999999 !important;
+    color:#006dcc;
+    padding-left: 5px;
+}
+
+.tau-see-executed-queries p{
+    z-index: 999999 !important;
+    color:#8000ff;
+    padding-left: 5px;
+}
+
+.span-path{
+    color:#d5d5d5;
+}
+.tau-symbol{
+    width:32px;
+    height:32px;
+    position:absolute;
+    cursor: pointer;
+    top:3px;
+    left:3px;
+    z-index: 999999 !important;
+    background-image: url('/images/tau/tau32g.png');
+}

@@ -22,6 +22,7 @@ class DataManager {
     protected $db_user;
     protected $lastErrorMessage;
     protected $lastErrorTrace;
+    protected $queryLog;
     private static $uniqueInstance = null;
     
     protected function __construct($db_name = false, $db_host = false, $db_pass = false, $db_user = false){
@@ -30,6 +31,8 @@ class DataManager {
         $this->db_host = $db_host;
         $this->db_pass = $db_pass;
         $this->db_user = $db_user;
+        
+        $this->queryLog = array();
         
         if(!$db_name){ $this->db_name = DB_NAME; }
         if(!$db_host){ $this->db_host = DB_HOST; }
@@ -83,21 +86,26 @@ class DataManager {
     }
     
     public function getRow($query,$returnAs=ARRAY_A){
+        
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
         $res = $this->db->get_row($query,$returnAs);
         return $this->getQueryResult($res);
     }
 
     public function getResults($query,$returnAs=ARRAY_A){
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
         $res = $this->db->get_results($query,$returnAs);
         return $this->getQueryResult($res);
     }
     
     public function getVar($query,$returnAs=ARRAY_A){
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
         $res = $this->db->get_var($query);
         return $this->getQueryResult($res);
     }
 
     public function makeQuery($query){
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
         $res = $this->db->query($query);
         return $this->getQueryResult($res, $query);
     }
@@ -109,6 +117,7 @@ class DataManager {
      * @return mixed Assoc array with results, of false if no results
      */
     public function getList($query,$key_field,$value_field){
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
         $res = $this->db->get_results($query,ARRAY_A);
         $list = array();
         $elems = count($res);
@@ -131,6 +140,7 @@ class DataManager {
      * @return mixed Assoc array with results, of false if no results
      */
     public function getListAndFull($query,$key_field,$value_field){
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
         $res = $this->db->get_results($query,ARRAY_A);
         $list = array();
         $elems = count($res);
@@ -150,6 +160,7 @@ class DataManager {
      * Starts a transaction
      */
     public function beginTransaction(){
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = "START TRANSACTION;"; }
         $this->db->query("START TRANSACTION;");
     }
     /**
@@ -158,6 +169,7 @@ class DataManager {
      * use rollback() otherwise
      */
     public function commit(){
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = "COMMIT;"; }
         $this->db->query("COMMIT");
     }
     /**
@@ -165,6 +177,7 @@ class DataManager {
      * Will roll back any changes to the db in current transaction.
      */
     public function rollback(){
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = "ROLLBACK;"; }
         $this->db->query("ROLLBACK");
     }
     /**
@@ -196,11 +209,18 @@ class DataManager {
      * @param string $query The query to execute
      */
     protected function doTransactionQuery($query){
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
         $res = $this->db->query($query);
 
         return $res;
     }
-
+    /**
+     *  Get a list of all queries executed, if DEBUG_MODE = true
+     * @return array List of all queries executed, if DEBUG_MODE = true
+     */
+    public function getExecutedQueries(){
+        return $this->queryLog;
+    }
     public function escape($vars){
         if(is_array($vars)){
             $new_array = array();
