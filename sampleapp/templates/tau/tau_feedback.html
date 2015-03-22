@@ -1,0 +1,46 @@
+
+<div class="tau-symbol">
+    
+</div>
+
+<div class="tau-see-log">
+    
+    <h3>Loaded templates</h3>
+    <div class="tau-see-loaded-templates">
+        {replace_templates}
+    </div>
+    
+    <br/>
+    
+    <h3>Performance info</h3>
+    <div class="tau-see-executed-queries">
+        {replace_performance}
+    </div>
+    
+    <br/>
+    
+    <h3>Executed queries</h3>
+    <div class="tau-see-executed-queries">
+        {replace_queries}
+    </div>
+    
+    
+    
+    
+    
+    
+</div>
+
+<script>
+    $(function () {
+        $('.tau-symbol').on('click', function () {
+        //Modify other elements if you don't see correctly the feedback bar
+        //$('header').toggle();
+        //$('nav').toggle();
+        //$('.navbar').toggle();
+        //General toggle
+        $('.tau-see-log').attr("z-index", 100001);
+        $('.tau-see-log').slideToggle();
+        });
+    });
+</script>

@@ -24,6 +24,8 @@ class PageRender {
     protected $lang_code; // like es_ES
     protected $cache;
     protected $emptyReplacer;
+    protected $templatesLoaded;
+    protected $fromCache;
     /**
      * Creates a new PageRender, to process template additions.
      * @param string $lang Language, like es
@@ -45,10 +47,9 @@ class PageRender {
         $this->lang_code = $lang_code;        
         $this->cache = new TauCache();
         $this->emptyReplacer = new Replacer();
-        
-        $this->headlineWidget = false;
-        $this->breakingNewsWidget = false;
-        $this->friendsWidget = false;
+        $this->templatesLoaded = array();
+        $this->fromCache = array();
+
     }
 
     public function getTranslationGroup($full_file_path){
@@ -68,10 +69,13 @@ class PageRender {
     public function loadFile($filename, Replacer $replacer, $cacheActive = false) {
         
         $id = false;
+        $this->templatesLoaded[] = $filename;
+        
         if( $cacheActive ){
             $this->cache->init($filename, $this->lang);
             if( $this->cache->useCacheFile() ){
                 $this->addContent( $this->cache->getCacheFile(), $this->emptyReplacer, $id);
+                $this->fromCache[$filename] = true;
                 return false;
             }
         }
@@ -109,9 +113,12 @@ class PageRender {
      */
     public function getStringFromFile($filename, Replacer $replacer = null, $cacheActive = false) {
         
+        $this->templatesLoaded[] = $filename;
+        
         if( $cacheActive ){
             $this->cache->init($filename, $this->lang);
             if( $this->cache->useCacheFile() ){
+                $this->fromCache[$filename] = true;
                 return $this->cache->getCacheFile();
             }
         }
@@ -155,9 +162,12 @@ class PageRender {
      */
     function getStringFromPhpFile($filename, Replacer $replacer = null, $cacheActive = false) {
         
+        $this->templatesLoaded[] = $filename;
+        
         if( $cacheActive ){
             $this->cache->init($filename, $this->lang);
             if( $this->cache->useCacheFile() ){
+                $this->fromCache[$filename] = true;
                 return $this->cache->getCacheFile();
             }
         }
@@ -194,9 +204,12 @@ class PageRender {
      */
     function loadPhpFile($filename, Replacer $replacer, $cacheActive = false) {
         
+        $this->templatesLoaded[] = $filename;
+        
         if( $cacheActive ){
             $this->cache->init($filename, $this->lang);
             if( $this->cache->useCacheFile() ){
+                $this->fromCache[$filename] = true;
                 $this->addContent( $this->cache->getCacheFile(), $this->emptyReplacer);
                 return false;
             }
@@ -294,13 +307,52 @@ class PageRender {
                 $js_val = $elem['content'];
                 $validation_text .= "tau_validation['$js_key'] = \"$js_val\";\n";
         }
+        //Tau feedback for local
+        $feedback_css = "";
+        $feedback_html ="";
+        if(DEBUG_MODE){
+            $feedback_css = file_get_contents(WEB_PATH . "/templates/tau/tau_feedback_css.html");          
+            $feedback_html = file_get_contents(WEB_PATH . "/templates/tau/tau_feedback.html");
+            $queriesExecuted = "";
+            $branch = $this->getGitBranch();
+            $templatesLoaded = "<p>Current branch: $branch</p>";
+            
+            foreach($this->templatesLoaded as $template){
+                
+                (isset($this->fromCache[$template]))?$cache = ' - [FROM_CACHE] ':$cache='';
+                
+                $template = str_replace(WEB_PATH, "<span class='span-path'>". WEB_PATH."</span>", $template);
+                
+                $templatesLoaded .= "<p>$template $cache </p>";
+            }
+            $feedback_html = str_replace('{replace_templates}', $templatesLoaded, $feedback_html);
+            
+            $queries = DataManager::getInstance()->getExecutedQueries();
+            
+            foreach($queries as $datetime => $query){
+                $queriesExecuted .= "<p><span class='span-path'>[ $datetime ]</span> $query</p>";
+            }
+            $feedback_html = str_replace('{replace_queries}', $queriesExecuted, $feedback_html);
+            
+            $performance_info = "<p>Memory: " . round(memory_get_peak_usage()/1024,0) . " KB</p>";
+            $performance_info .= "<p>Max Memory: " . round(memory_get_peak_usage(true)/1024,0) . " KB</p>";
+            
+            
+            $feedback_html = str_replace('{replace_performance}', $performance_info, $feedback_html);
+            
+        }
+        
         //Constants
         $constants  = "const APP_BASE_URL='" . APPLICATION_BASE_URL . "';\n";
         $constants .= "const LANG='" . $this->lang . "';\n";
         $constants .= "const SPAN_ERROR_CLASS='" . SPAN_ERROR_CLASS . "';\n";
         $constants .= "const FIELD_ERROR_CLASS='" . FIELD_ERROR_CLASS . "';\n";
-        $endPage = str_replace("<head>","<head>\n\n<script language='javascript'>\n\n" . 
-                $validation_text . "\n" .$constants. "\n\n</script>\n\n",$endPage);
+        $endPage = str_replace("</head>","\n\n<script language='javascript'>\n\n" . 
+                $validation_text . "\n" .$constants. "\n\n</script>\n\n".
+                "$feedback_css \n\n</head>\n" ,$endPage);
+        
+        $body = $this->getTag('body', $endPage);
+        $endPage = str_replace($body, "$body\n $feedback_html", $endPage);
         
         if(USE_TAU_CACHE && VERBOSE_MODE){
             $this->cache->saveMessagesToFile();
@@ -310,7 +362,15 @@ class PageRender {
         
         return $endPage;
     }
+    protected function getTag( $tag, $html ) {
+        $tag = preg_quote($tag);
+        $matches = array();
+        preg_match('/<'.$tag.'(.)*?>/',
+                         $html,
+                         $matches);
 
+        return $matches[0];
+      }
     protected function sendErrorMail( $filename ){
         sendSimpleMail(
                 ERROR_MAIL, 
@@ -332,7 +392,16 @@ class PageRender {
     public function __toString() {
         return $this->toString();
     }
-
+    protected function getGitBranch(){
+        if(!file_exists('../.git/HEAD')){
+            return "not a git repository";
+        }
+        $stringfromfile = file('../.git/HEAD', FILE_USE_INCLUDE_PATH);
+        $firstLine = $stringfromfile[0]; //get the string from the array
+        $explodedstring = explode("/", $firstLine, 3); //separate out by the "/" in the string
+        $branchname = $explodedstring[2]; //get the one that is always the branch name
+        return $branchname;
+    }
 }
 
 ?>
