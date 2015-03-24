@@ -98,12 +98,12 @@ if(isset($_GET['execute']) && $_GET['execute'] == 'yes'
         $migrateContentSentences = explode(SQL_SPLIT, $migrateContent);
 
         foreach($migrateContentSentences as $migrateSentence){
-
+            
             $migrateSentence = removeMysqlComments($migrateSentence);
             $migrateSentence = trim($migrateSentence);
 
             if($migrationSuccess){
-
+            
                 $migrationSuccess = DataManager::getInstance()->makeQuery($migrateSentence);
 
                 if(!$migrationSuccess){
@@ -241,7 +241,13 @@ function removeMysqlComments($text){
     $resultLines = "";
     foreach($lines as $line){
         $line = trim($line, " ");
-        if(!(preg_match('/^--.+$/',$line))) {
+        if( !( preg_match('/^--.+$/',$line) )
+                && ( strpos($line, "/*") === false || 
+                        strpos($line, "/*") > 4 )
+                &&
+                ( strpos($line, "--") === false
+                || strpos($line, "--") > 4 )
+                ) {
             $resultLines .= $line . " ";
         }
     }
