@@ -43,7 +43,7 @@ TauRequest::init(TauURI::$url, (TauURI::$parameters)? TauURI::$parameters : arra
 TauMessages::addMessage("total url parts: ". TauURI::$urlPartsCount, 'notice', 'index');
 TauMessages::addNotice("total url parameters: ". TauURI::$parametersCount, 'index');
 
-
+LanguageLoader::getInstance()->getTranslations('url', APPLICATION_BASE_URL, Tau::getInstance()->getLang());
 
 //Here you have a chance to alter the controller output,
 //and represents the last output of the application ( unless debug logging )

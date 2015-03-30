@@ -16,6 +16,7 @@ class LanguageLoader {
 
     protected $db;
     protected $cache;
+    protected $url;
     private static $uniqueInstance = null;
     
     protected function __construct() {
@@ -58,13 +59,17 @@ class LanguageLoader {
             $lines = $this->db->getResults("select item,content from tau_translations where lang='".$language."' and t_group='".$group."';" );
             $this->cache[$group][$language] = $lines;
         }
-        
+               
         $translations = array();
         
         foreach($lines as $line){
 
             $item = $line['item'];
             $text = $line['content'];
+            
+            if($group == 'url'){
+                $this->url[$item] = $text;
+            }
             
             if(strpos($text,"replace_ff_url") !== false  || strpos($text,"replace_ff_lang") !== false){
                 
@@ -81,7 +86,15 @@ class LanguageLoader {
         }
              
             return $translations;
-
+    }
+    
+    public function translateUrl( $url ){
+        $url = trim($url);
+        if( isset( $this->url[$url] ) ){
+            return $this->url[$url];
+        }else{
+            return "not-defined-url";
+        }
     }
     
 }
