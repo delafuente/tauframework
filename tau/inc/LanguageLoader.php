@@ -74,9 +74,9 @@ class LanguageLoader {
             }
             
             if( TauSession::get('vanilla') && $parseVanilla ){
-                $translations[] = array( 'item' => $item, 'content' => "%%" . $item . "%%");
+                $translations[$item] = "%%" . $item . "%%";
             }else{
-                $translations[] = array( 'item' => $item, 'content' => $text);
+                $translations[$item] = $text;
             }
         }
              
