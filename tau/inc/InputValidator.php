@@ -54,14 +54,10 @@ class InputValidator {
             $this->db = DataManager::getInstance();
         }
         $this->languageLoader = LanguageLoader::getInstance();
-        $labelsArr = $this->languageLoader->getTranslations('lang_labels', APPLICATION_BASE_URL, Tau::getInstance()->getLang());
-        $labels = array();
-        $validationTextsResult = $this->languageLoader->getTranslations('js_validation', APPLICATION_BASE_URL, Tau::getInstance()->getLang());
-        $validationTexts = array();
+        $labels = $this->languageLoader->getTranslations('lang_labels', APPLICATION_BASE_URL, Tau::getInstance()->getLang());
         
-        foreach($labelsArr as $elem){ $labels[$elem['item']] = $elem['content']; }
-        foreach($validationTextsResult as $elem){ $validationTexts[$elem['item']] = $elem['content']; }
-        
+        $validationTexts = $this->languageLoader->getTranslations('js_validation', APPLICATION_BASE_URL, Tau::getInstance()->getLang());
+              
         if(empty($inputArray)){
             $this->redirectToError($labels['FRM_YET_RECEIVED']);
         }

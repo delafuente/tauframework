@@ -49,10 +49,7 @@ class Replacer {
         
         $tanslations = array();
 
-        foreach ($lines as $line) {
-
-            $item = $line['item'];
-            $text = $line['content'];
+        foreach ($lines as $item => $text) {
 
             if (TauSession::get('vanilla')) {
                 $this->addFilter(trim("{{".$item."}}"), "%%" . trim($item) . "%%");
