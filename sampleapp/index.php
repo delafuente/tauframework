@@ -29,7 +29,6 @@ require_once( __ROOT__ . "/tau/inc/framework/TauSession.php");
 require_once( __ROOT__ . "/tau/inc/framework/TauRequest.php");
 require_once( __ROOT__ . "/tau/inc/framework/TauDispatcher.php");
 require_once( __ROOT__ . "/tau/inc/framework/TauRouter.php");
-require_once( WEB_PATH . "/libs/facebook.php");
 require_once( WEB_PATH . "/routes/general.php");
 //ToDo: Make InputValidator fully static
 
