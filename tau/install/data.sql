@@ -423,7 +423,7 @@ INSERT INTO `tau_translations` ( `lang`, `t_group`, `item`, `content`) VALUES
 ( 'en', 'js_validation', 'only_numeric', 'This field can contain only numbers.'),
 ( 'en', 'js_validation', 'only_integer', 'This field can contain only integer numbers.'),
 ( 'en', 'js_validation', 'not_enough_chars', 'Data is too short. rpl_param characters minimum.'),
-( 'en', 'js_validation', 'too_much_chars', 'Data is too short. rpl_param characters minimum.'),
+( 'en', 'js_validation', 'too_much_chars', 'Data is too large. rpl_param characters maximum.'),
 ( 'en', 'js_validation', 'bad_date', "Date introduced is not correct, or it's invalid."),
 ( 'en', 'js_validation', 'not_equals_to', 'Value must be the same as precedent field'),
 ( 'en', 'js_validation', 'min_value', 'Value must be at least rpl_param.'),
