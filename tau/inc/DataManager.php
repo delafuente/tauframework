@@ -87,25 +87,25 @@ class DataManager {
     
     public function getRow($query,$returnAs=ARRAY_A){
         
-        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())."_".uniqid()] = $query; }
         $res = $this->db->get_row($query,$returnAs);
         return $this->getQueryResult($res);
     }
 
     public function getResults($query,$returnAs=ARRAY_A){
-        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())."_".uniqid()] = $query; }
         $res = $this->db->get_results($query,$returnAs);
         return $this->getQueryResult($res);
     }
     
     public function getVar($query,$returnAs=ARRAY_A){
-        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())."_".uniqid()] = $query; }
         $res = $this->db->get_var($query);
         return $this->getQueryResult($res);
     }
 
     public function makeQuery($query){
-        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())."_".uniqid()] = $query; }
         $res = $this->db->query($query);
         return $this->getQueryResult($res, $query);
     }
@@ -117,7 +117,7 @@ class DataManager {
      * @return mixed Assoc array with results, of false if no results
      */
     public function getList($query,$key_field,$value_field){
-        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())."_".uniqid()] = $query; }
         $res = $this->db->get_results($query,ARRAY_A);
         $list = array();
         $elems = count($res);
@@ -140,7 +140,7 @@ class DataManager {
      * @return mixed Assoc array with results, of false if no results
      */
     public function getListAndFull($query,$key_field,$value_field){
-        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())."_".uniqid()] = $query; }
         $res = $this->db->get_results($query,ARRAY_A);
         $list = array();
         $elems = count($res);
@@ -160,7 +160,7 @@ class DataManager {
      * Starts a transaction
      */
     public function beginTransaction(){
-        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = "START TRANSACTION;"; }
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())."_".uniqid()] = "START TRANSACTION;"; }
         $this->db->query("START TRANSACTION;");
     }
     /**
@@ -169,7 +169,7 @@ class DataManager {
      * use rollback() otherwise
      */
     public function commit(){
-        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = "COMMIT;"; }
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())."_".uniqid()] = "COMMIT;"; }
         $this->db->query("COMMIT");
     }
     /**
@@ -177,7 +177,7 @@ class DataManager {
      * Will roll back any changes to the db in current transaction.
      */
     public function rollback(){
-        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = "ROLLBACK;"; }
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())."_".uniqid()] = "ROLLBACK;"; }
         $this->db->query("ROLLBACK");
     }
     /**
@@ -209,7 +209,7 @@ class DataManager {
      * @param string $query The query to execute
      */
     protected function doTransactionQuery($query){
-        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())] = $query; }
+        if(DEBUG_MODE){ $this->queryLog[date("Y-m-d H:i:s",time())."_".uniqid()] = $query; }
         $res = $this->db->query($query);
 
         return $res;
