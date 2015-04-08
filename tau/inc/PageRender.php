@@ -24,7 +24,6 @@ class PageRender {
     protected $lang_code; // like es_ES
     protected $cache;
     protected $emptyReplacer;
-    protected $templatesLoaded;
     protected $fromCache;
     /**
      * Creates a new PageRender, to process template additions.
@@ -47,7 +46,6 @@ class PageRender {
         $this->lang_code = $lang_code;        
         $this->cache = new TauCache();
         $this->emptyReplacer = new Replacer();
-        $this->templatesLoaded = array();
         $this->fromCache = array();
 
     }
@@ -69,7 +67,7 @@ class PageRender {
     public function loadFile($filename, Replacer $replacer, $cacheActive = false) {
         
         $id = false;
-        $this->templatesLoaded[] = $filename;
+        Tau::addTemplate( $filename );
         
         if( $cacheActive ){
             $this->cache->init($filename, $this->lang);
@@ -113,7 +111,7 @@ class PageRender {
      */
     public function getStringFromFile($filename, Replacer $replacer = null, $cacheActive = false) {
         
-        $this->templatesLoaded[] = $filename;
+        Tau::addTemplate( $filename );
         
         if( $cacheActive ){
             $this->cache->init($filename, $this->lang);
@@ -162,7 +160,7 @@ class PageRender {
      */
     function getStringFromPhpFile($filename, Replacer $replacer = null, $cacheActive = false) {
         
-        $this->templatesLoaded[] = $filename;
+        Tau::addTemplate( $filename );
         
         if( $cacheActive ){
             $this->cache->init($filename, $this->lang);
@@ -204,7 +202,7 @@ class PageRender {
      */
     function loadPhpFile($filename, Replacer $replacer, $cacheActive = false) {
         
-        $this->templatesLoaded[] = $filename;
+        Tau::addTemplate( $filename );
         
         if( $cacheActive ){
             $this->cache->init($filename, $this->lang);
@@ -315,7 +313,8 @@ class PageRender {
             $branch = $this->getGitBranch();
             $templatesLoaded = "<p>Current branch: $branch</p>";
             
-            foreach($this->templatesLoaded as $template){
+                        
+            foreach( Tau::getLoadedTemplates() as $template ){
                 
                 (isset($this->fromCache[$template]))?$cache = ' - [FROM_CACHE] ':$cache='';
                 

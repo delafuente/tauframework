@@ -154,6 +154,8 @@ class TauForm {
         if($theme == false){ $theme = $this->defaultTheme; }
         $templateFile = APPLICATION_PATH . "/" . APP_SLUG ."/". str_replace('{rep_theme}',$theme, $this->themeMapping[$template]);
         
+        Tau::addTemplate($templateFile);
+        
         if(file_exists($templateFile)){
             return file_get_contents($templateFile);
         }else{

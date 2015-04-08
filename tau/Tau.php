@@ -20,10 +20,13 @@ class Tau {
     protected $lang;
     private static $allDbInstances;
     private static $uniqueInstance = null;
+    private static $loadedTemplates;
 
     protected function __construct() {
 
         $current_env = self::getEnv('APPLICATION_ENVIRONMENT');
+        self::$loadedTemplates = array();
+        
         switch ($current_env) {
             case 'local':
             case 'pre':
@@ -55,7 +58,21 @@ class Tau {
     private final function __wakeup() {
         
     }
-
+    /**
+     * Add a template to the list
+     * @param string $template path to the template
+     */
+    public static function addTemplate( $template ){
+        self::$loadedTemplates[] = $template;
+    }
+    /**
+     * Get the list of loaded templates
+     * @return array The list of templates
+     */
+    public static function getLoadedTemplates(){
+        return self::$loadedTemplates;
+    }
+    
     /**
      * Get the main singleton instance
      * @return LanguageLoader Singleton instance
