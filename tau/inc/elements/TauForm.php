@@ -736,6 +736,10 @@ class TauForm {
             $html .= $this->getSubmitButton();
         }
         
+        $hidden_form_hash ='<input type="hidden" id="form_hash" '
+                . 'name="form_hash" value="'.$this->formHash.'" />' . "\n";
+        
+        $html .= $hidden_form_hash . $this->hiddenInputs;
 
         $html .= "</form>\n"; 
         
@@ -786,18 +790,11 @@ class TauForm {
      */
     protected function getSubmitButton(){
 
-        $html ="";
-        
-        $hidden_form_hash ='<input type="hidden" id="form_hash" '
-                . 'name="form_hash" value="'.$this->formHash.'" />' . "\n";
-        
         $sendButton = $this->getTemplate('submit', $this->submitTheme);
         $sendButton = str_replace("{replace_value}", $this->submitValue, $sendButton);
         $sendButton = str_replace("{replace_id}", $this->id, $sendButton);
-        
-        $html =  $hidden_form_hash . $this->hiddenInputs . $sendButton ;
 
-        return $html;
+        return $sendButton;
     }
 
      /**
