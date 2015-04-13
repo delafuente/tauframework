@@ -44,6 +44,7 @@ class TauForm {
     protected $formTheme;
     protected $formHash;
     protected $disableSubmit;
+    protected $allowSubmitOnEnter;
     
     /**
      * Creates a new Form object
@@ -85,6 +86,7 @@ class TauForm {
         $this->submitTheme = false;
         $this->formTheme = false;
         $this->disableSubmit = false;
+        $this->allowSubmitOnEnter = false;
         $this->elements = array();
         $this->elementTypes = array();
         $this->elementNames = array();
@@ -99,7 +101,13 @@ class TauForm {
     public function setSubmitButtonText($text){
         $this->submitValue = $text;
     }
-    
+    /**
+     * Allows form to be submit if the user press enter in some non-textarea field.
+     * This is set automatically if you fire disableSubmit()
+     */
+    public function allowSubmitOnEnter(){
+        $this->allowSubmitOnEnter = true;
+    }
     /**
      * For existing data, get the row information to show in form
      * @param type $model Table name
@@ -147,7 +155,8 @@ class TauForm {
             'submit' => 'templates/{rep_theme}/forms/submit.html',
             'text' => 'templates/{rep_theme}/forms/text.html',
             'textarea' => 'templates/{rep_theme}/forms/textarea.html',
-            'prevent_enter' => 'templates/{rep_theme}/forms/prevent_enter.html'
+            'prevent_enter' => 'templates/{rep_theme}/forms/prevent_enter.html',
+            'allow_enter' => 'templates/{rep_theme}/forms/allow_enter.html'
         );
     }
     
@@ -168,8 +177,13 @@ class TauForm {
             
         }
     }
+    /**
+     * Will not use submit button, and also will allow enter as submit in non
+     * text-area fields.
+     */
     public function disableSubmit(){
         $this->disableSubmit = true;
+        $this->allowSubmitOnEnter = true;
     }
     /**
      * Set the caption of the form
@@ -729,8 +743,14 @@ class TauForm {
         
         $html = str_replace("{replace_form}",$html,$container);
         
-        $preventEnter = $this->getTemplate('prevent_enter', $containerTheme);
-        $preventEnter = str_replace('{formid}', $this->id, $preventEnter);
+        if( $this->allowSubmitOnEnter ){
+            $preventEnter = $this->getTemplate('allow_enter', $containerTheme);
+            $preventEnter = str_replace('{formid}', $this->id, $preventEnter);
+        }else{
+            $preventEnter = $this->getTemplate('prevent_enter', $containerTheme);
+            $preventEnter = str_replace('{formid}', $this->id, $preventEnter);
+        }
+        
         
         $html .= "<!--googleoff: all -->\n";
         $html .= "<span style='visibility:hidden' id='rr_names_" . $this->id . "'>" . $names . "</span>\n";

@@ -3,6 +3,7 @@
         if(event.keyCode == 13 && event.target.nodeName!='TEXTAREA')
         {
           event.preventDefault();
+          tauValidation.testToSend('{formid}');
           return false;
         }
     });
