@@ -146,7 +146,8 @@ class TauForm {
             'select_option' => 'templates/{rep_theme}/forms/select_option.html',
             'submit' => 'templates/{rep_theme}/forms/submit.html',
             'text' => 'templates/{rep_theme}/forms/text.html',
-            'textarea' => 'templates/{rep_theme}/forms/textarea.html'
+            'textarea' => 'templates/{rep_theme}/forms/textarea.html',
+            'prevent_enter' => 'templates/{rep_theme}/forms/prevent_enter.html'
         );
     }
     
@@ -728,10 +729,14 @@ class TauForm {
         
         $html = str_replace("{replace_form}",$html,$container);
         
+        $preventEnter = $this->getTemplate('prevent_enter', $containerTheme);
+        $preventEnter = str_replace('{formid}', $this->id, $preventEnter);
+        
         $html .= "<!--googleoff: all -->\n";
         $html .= "<span style='visibility:hidden' id='rr_names_" . $this->id . "'>" . $names . "</span>\n";
         $html .= "<span style='visibility:hidden' id='rr_rules_" . $this->id . "'>" . $validation . "</span>\n";
         $html .= "<!--googleon: all -->\n";
+        $html .= $preventEnter . "\n";
         $html .= "\n";
         
         
