@@ -57,3 +57,7 @@
     z-index: 999999 !important;
     background-image: url('/images/tau/tau32g.png');
 }
+
+.tau-cache{
+    color:#4cae4c;
+}
