@@ -306,9 +306,13 @@ class PageRender {
         //Tau feedback for local
         $feedback_css = "";
         $feedback_html ="";
+        $queriesExecuted = "";
+        $feedback_footer = "";
+        
         if(DEBUG_MODE){
             $feedback_css = file_get_contents(WEB_PATH . "/templates/tau/tau_feedback_css.html");          
             $feedback_html = file_get_contents(WEB_PATH . "/templates/tau/tau_feedback.html");
+            $feedback_footer = file_get_contents(WEB_PATH . "/templates/tau/tau_feedback_footer.html");
             $queriesExecuted = "";
             $branch = $this->getGitBranch();
             $templatesLoaded = "<p>Current branch: $branch</p>";
@@ -316,10 +320,12 @@ class PageRender {
                         
             foreach( Tau::getLoadedTemplates() as $template ){
                 
-                (isset($this->fromCache[$template]))?$cache = ' - [FROM_CACHE] ':$cache='';
+                (isset($this->fromCache[$template]))?$cache = ' -<span class="tau-cache"> [FROM_CACHE] </span>':$cache='';
                 
                 $template = str_replace(WEB_PATH, "<span class='span-path'>". WEB_PATH."</span>", $template);
-                
+                $pos = strrpos($template, "/");
+                $templateFile = str_replace('.html','',substr($template, $pos +1));
+                $template = str_replace( $templateFile , "<b>$templateFile</b>", $template );
                 $templatesLoaded .= "<p>$template $cache </p>";
             }
             $feedback_html = str_replace('{replace_templates}', $templatesLoaded, $feedback_html);
@@ -350,6 +356,7 @@ class PageRender {
         
         $body = $this->getTag('body', $endPage);
         $endPage = str_replace($body, "$body\n $feedback_html", $endPage);
+        $endPage = str_replace("</html>", "\n $feedback_footer \n</html>", $endPage);
         
         if(USE_TAU_CACHE && VERBOSE_MODE){
             $this->cache->saveMessagesToFile();
