@@ -46,6 +46,14 @@ class TauRequest {
         return $_POST[$key];
     }
 
+    public static function getPostArray(){
+        return $_POST;
+    }
+    
+    public static function isAjaxRequest(){
+        return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+    }
+    
     public static function getParams() {
         return self::$params;
     }
