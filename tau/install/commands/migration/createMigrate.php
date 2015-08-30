@@ -2,9 +2,9 @@
 session_start();
 /**
  * 
- * @abstract doodora
+ * @abstract Create migrate files
  * @author Lucas de la Fuente
- * @project doodora
+ * @project tau
  * @encoding UTF-8
  * @date 30-ago-2015
  * @copyright (c) Lucas de la Fuente <lucasdelafuente1978@gmail.com>
