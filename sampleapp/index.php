@@ -12,6 +12,7 @@ session_start();
  */
 
 define('__ROOT__', str_replace("\\","/",dirname(dirname(__FILE__))) );
+spl_autoload_register('tauAutoLoad');
 
 require_once( __ROOT__ . "/tau/inc/config.php");
 require_once( __ROOT__ . "/tau/inc/PageRender.php");
@@ -60,7 +61,7 @@ if(VERBOSE_MODE){
     echo TauMessages::getAllMessagesHtml();
 }
 
-function __autoload($class){
+function tauAutoLoad($class){
     global $autoloadPaths;
     $inc = false;
     require_once(__ROOT__ . '/tau/inc/framework/TauAutoload.php');
