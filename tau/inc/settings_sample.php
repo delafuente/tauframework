@@ -197,4 +197,4 @@ define('RECAPTCHA_PUBLIC_KEY', 'your public key');
 define('RECAPTCHA_PRIVATE_KEY', 'your private key');
 define('CACHE_SECONDS_LIFETIME',3600);
 define('ALLOW_FORM_DATA_REFRESH',true);
-?>
+define('GOOGLE_ANALYTICS_UID','test');

@@ -51,6 +51,13 @@
     <a href="install/">Install the application</a>
     <a href="install/commands/lang.php">Edit template translations with Tau Language Tool</a>
     <a href="install/commands/migration/migrate.php">Execute pending migrates</a>
+    <p>Create migrate with name:</p>
+    Any non A-Za-z0-9 characters will be changed as underscore ( '_' )
+    <form name="frmCreateMigrate" method="get" action="install/commands/migration/createMigrate.php">
+        <input type="text" name="migrateName" id="migrateName" placeholder="migrate name" /><br/>
+        <input type="text" name="userName" id="userName" placeholder="user name" /><br/>
+        <input type="submit" value="Create Migrate" />
+    </form>
 </div>
 </body>
 </html>
