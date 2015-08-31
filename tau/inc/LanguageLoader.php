@@ -97,6 +97,10 @@ class LanguageLoader {
         }
     }
     
+    public function getAllUrls(){
+        return $this->url;
+    }
+    
 }
 
 ?>

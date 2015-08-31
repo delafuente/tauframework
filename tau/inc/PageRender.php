@@ -324,6 +324,8 @@ class PageRender {
             $performance_info = "<p>Memory: " . round(memory_get_peak_usage()/1024,0) . " KB</p>";
             $performance_info .= "<p>Max Memory: " . round(memory_get_peak_usage(true)/1024,0) . " KB</p>";
             
+            $performance_info .= TauMessages::getAllMessagesHtml();
+            
             
             $feedback_html = str_replace('{replace_performance}', $performance_info, $feedback_html);
             

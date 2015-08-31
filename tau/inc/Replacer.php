@@ -33,7 +33,24 @@ class Replacer {
         $this->replacements[$title]=$value;
         $this->isEmpty=false;
     }
-
+    /**
+     * Add array to create filters with. See addFilter
+     * @param array $items Each key is the title, each value the replacement
+     */
+    public function addFilters(array $items){
+        foreach($items as $key => $value){
+            $this->addFilter($key, $value);
+        }
+    }
+    /**
+     * Add array to create filters with each key within { }. See addFilter
+     * @param array $items Each key is the title, each value the replacement
+     */
+    public function addCurlyFilters(array $items){
+        foreach($items as $key => $value){
+            $this->addFilter('{'.$key.'}', $value);
+        }
+    }
     /**
      * This function adds filters for any given group of replacements.
      * Also returns the list of key-value replacements for further use, if
