@@ -15,13 +15,14 @@
 class NavigationBarWidget extends TWidget {
 
     public function process(){
-        //$this->template = $this->oRender->getStringFromFile($filename, $replacer);
-        $this->oRender->loadFile( 
-                WEB_PATH . "/templates/" . LAYOUT . "/parts/navbar.html", 
-                $this->oReplacer, true);
+        $filepath = WEB_PATH . "/templates/" . LAYOUT . "/parts/navbar.html";
         
+        if(!$this->getFileFromCache($filepath)){
+            //Process the file
+        }
+        
+        $this->oRender->loadFile( 
+                $filepath, 
+                $this->oReplacer, $this->useCache);
     }
-
 }
-
-?>
