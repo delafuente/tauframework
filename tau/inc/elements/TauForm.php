@@ -94,7 +94,7 @@ class TauForm {
         $this->elementLabels = array();
         $this->modelData = false;
         $this->modelMapping = false;
-        $this->formHash = uniqid();
+        $this->formHash = sha1($this->id . $this->name);
         $this->setThemeMapping();
     }
     

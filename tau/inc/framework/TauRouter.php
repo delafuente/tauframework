@@ -57,7 +57,7 @@ class TauRouter {
                 TauMessages::addNotice("Encontrado : " . print_r($dump, true), "TauRouter::testRoutes()");
                 for ($i = 0; $i < count($dump); $i++) {
                     TauMessages::addNotice(" - Parameter $i: " . $dump[$i], "TauRouter::testRoutes()");
-                    TauRequest::setParam('uri_$i', $dump[$i]);
+                    TauRequest::setParam("uri_$i", $dump[$i]);
                 }
 
                 TauMessages::addNotice("MATCH: '$urlPattern' and controller: $controller and path: $path", 'TauRouter::route()');

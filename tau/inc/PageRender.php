@@ -336,6 +336,7 @@ class PageRender {
         $constants .= "const LANG='" . $this->lang . "';\n";
         $constants .= "const SPAN_ERROR_CLASS='" . SPAN_ERROR_CLASS . "';\n";
         $constants .= "const FIELD_ERROR_CLASS='" . FIELD_ERROR_CLASS . "';\n";
+        $constants .= "const APP_LANG_URL='" . APPLICATION_BASE_URL."/".$this->lang . "';\n";
         $endPage = str_replace("</head>","\n\n<script language='javascript'>\n\n" . 
                 $validation_text . "\n" .$constants. "\n\n</script>\n\n".
                 "$feedback_css \n\n</head>\n" ,$endPage);
@@ -401,6 +402,7 @@ class PageRender {
         $replacements = array(
             '{replace_form_hash}' => uniqid(),
             '{replace_base_url}' => APPLICATION_BASE_URL,
+            '{replace_app_lang_url}' => APPLICATION_BASE_URL ."/".$this->lang,
             '{replace_more_css}' => '',
             '{replace_more_js}' => '',
             '{replace_description}' => $this->description,
@@ -414,5 +416,12 @@ class PageRender {
         );
         
         return $replacements;
+    }
+    /**
+     * Provide access to current TauCache
+     * @return TauCache the main TauCache in use
+     */
+    public function cache(){
+        return $this->cache;
     }
 }

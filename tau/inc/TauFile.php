@@ -111,9 +111,10 @@ function saveImageFile($nameFileInput,
     
     $nameFile = $nameFileInput;
     if($username){
-        $usname = $username;
+        $usname = mb_strtolower($username);
     }else{
-        $usname = strtolower(TauSession::get('name_user'));
+        $us = TauSession::get('user');
+        $usname = mb_strtolower($us['nick']);
     }
     
     
@@ -129,7 +130,6 @@ function saveImageFile($nameFileInput,
     $preNickA = substr($usname, 0, 1);
     $preNickB = substr($usname, 1, 1);
     $preNick = $preNickA . "/" . $preNickB;
-    $usname = strtolower($usname);
     
     $destination_path =  TAU_UPLOADS_PATH  . $preNick . $this->directorySeparator . $usname . $this->directorySeparator;
     $month = @date("F",time());
@@ -693,4 +693,3 @@ function resizeImage($imagenOriginal, $archivodestino, $maxSideSize, $calidadcom
 }
 
 }
-?>

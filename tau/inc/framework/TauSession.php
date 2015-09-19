@@ -29,5 +29,17 @@ class TauSession {
         if(!isset($_SESSION[$key])){ return false; }
         return $_SESSION[$key];
     }
+    
+    public static function userLoggedIn(){
+        return (isset($_SESSION['user']['logged']) && $_SESSION['user']['logged'])?true:false;
+    }
+    
+    public static function getLoginSource(){
+        if(self::userLoggedIn()){
+            return $_SESSION['user']['login_source'];
+        }else{
+            return false;
+        }
+    }
 
 }

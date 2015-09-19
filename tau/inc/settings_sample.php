@@ -107,9 +107,13 @@ if(DEBUG_MODE){
 }
 //Data that (normally) remains unchanged in every environment
 $autoloadPaths = array(
-  APPLICATION_PATH . "/tau/inc",
+    APPLICATION_PATH . "/tau/inc",
     APPLICATION_PATH . "/tau/inc/framework",
-    WEB_PATH . "/tau/inc/modules"
+    APPLICATION_PATH . "/app/libs",
+    APPLICATION_PATH . "/app/modules",
+    APPLICATION_PATH . "/app/modules/user",
+    APPLICATION_PATH . "/app/modules/login",
+    APPLICATION_PATH . "/app/controllers/widgets/web"
 );
 /** Field span error class */
 define('SPAN_ERROR_CLASS', 'spanError');
