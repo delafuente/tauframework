@@ -81,9 +81,10 @@ class Replacer {
     }
 
     public function filter($text){
-        $keys = array_keys($this->replacements);
-        $values = array_values($this->replacements);
+        
         if(!$this->isEmpty){
+            $keys = array_keys($this->replacements);
+            $values = array_values($this->replacements);
             return str_replace($keys,$values,$text);
         }else{
             return $text;
@@ -102,6 +103,3 @@ class Replacer {
         return $this->replacements[$replacementKey];
     }
 }
-
-
-?>

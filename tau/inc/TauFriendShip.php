@@ -10,7 +10,7 @@
  * @license https://github.com/delafuente/tauframework/blob/master/LICENSE The MIT License (MIT)
  */
 
-/* table friendship:
+/* table tau_friendship:
 id_rel
 id_a - ui  ( always < id_b )
 id_b - ui
@@ -28,26 +28,17 @@ class TauFriendShip{
    protected $db; //Database Handler
    protected $logged_user_id;
    /**
-    * Make a new LuFriendship object. Make sure the user is logged in
+    * Make a new TauFriendShip object. Make sure the user is logged in
     * before to use this class.
     * @param DataManager $db_handler The database handler
     */
-    public function  __construct(DataManager &$db_handler = null) {
+    public function  __construct() {
 
-        if($db_handler === null){
-            $this->db = DataManager::getInstance();
-        }else{
-            $this->db = $db_handler;
-        }
+        $this->db = DataManager::getInstance();
         
-        /* Removed this, because you can use only getFriends method, which doesn't need a logged in user,
-         * only a user id provided as a function param
-        if(! isset($_SESSION['id_user'])){
-            $this->dlog("FATAL ERROR: id_user SESSION variable is not set when creating LuFriendShip object", "__construct");
-            $_SESSION['last_error'] = "FATAL ERROR: id_user SESSION variable is not set when creating LuFriendShip object";
-            header("Location: /error/");
-        }*/
-        $this->logged_user_id = (TauSession::get('id_user'))?TauSession::get('id_user'):0;
+        $sessUser = TauSession::get('user');
+        
+        $this->logged_user_id = ($sessUser['id_user'])?$sessUser['id_user']:0;
         
     }
 
@@ -71,7 +62,7 @@ public function testFriendshipRequest($n,$z,$requester){
     try{
         
      $rel_search = ($requester==$a)?"a_to_b":"b_to_a";
-     $query = "select id_rel,relation from friendship where id_a=$a and id_b=$b limit 1;";
+     $query = "select id_rel,relation from tau_friendship where id_a=$a and id_b=$b limit 1;";
      $resultArray = $this->db->getRow($query);
      $relation = $resultArray['relation'];
      $id_rel = $resultArray['id_rel'];
@@ -122,7 +113,7 @@ protected function deletePreviousRelation($n,$z){
     if($n < $z){ $a = $n; $b = $z;}else{$a = $z;$b = $n;}
      $can_make_action = ($a==$this->logged_user_id || $b == $this->logged_user_id);
      if($can_make_action){
-         $query = "delete from friendship where id_a=$a and id_b=$b";
+         $query = "delete from tau_friendship where id_a=$a and id_b=$b";
          $res = $this->db->makeQuery($query);
          if($res){
              return true;
@@ -145,7 +136,7 @@ protected function deletePreviousRelation($n,$z){
   public function registerFriendship($a_id,$b_id,$rel_id){
     //Control this user can modify this relation:
      $can_make_action = ($a_id==$this->logged_user_id || $b_id == $this->logged_user_id);
-    $query = "update friendship set id_a=$a_id, id_b=$b_id, relation='friends' where id_rel=$rel_id";
+    $query = "update tau_friendship set id_a=$a_id, id_b=$b_id, relation='friends' where id_rel=$rel_id";
     if($can_make_action){
         $res = $this->db->makeQuery($query);
     }else{
@@ -169,25 +160,23 @@ protected function deletePreviousRelation($n,$z){
    */
   public function unregisterFriendship($n,$z,$requester){
     if($n < $z){ $a = $n; $b = $z;}else{$a = $z;$b = $n;}
-        //echo "<p>a: $a b: $b</p>";
     //Control this user can modify this relation:
      $can_make_action = ($a==$this->logged_user_id || $b == $this->logged_user_id);
-        //echo "<p>Can make action: " . $can_make_action . "</p>";
+       
     $id_of_rel = $this->areFriends($n, $z);
-        //echo "<p>id_of_rel: areFriends($n,$z) : " . $id_of_rel . "</p>";
+        
     if($id_of_rel && $can_make_action){
-        $newRel = ($requester == $a)?"exfriends_a":"exfriends_b";
-        //echo "<p>newRel: $newRel</p>";
-        $query = "update friendship set relation ='".$newRel."' where id_rel= $id_of_rel";
-        //echo "<p>query: $query</p>";
+        
+        $newRel = ($requester == $a)?"exfriends_a":"exfriends_b";       
+        $query = "update tau_friendship set relation ='".$newRel."' where id_rel= $id_of_rel";
         $res = $this->db->makeQuery($query);
+        
         if(!$res){
             return false;
         }
     }else{
         return false;
     }
-        //echo "<p>res: $res</p>";
     return $res;
   }
 
@@ -206,7 +195,7 @@ protected function deletePreviousRelation($n,$z){
     //Control this user can modify this relation:
      $can_make_action = ($a_id==$this->logged_user_id || $b_id == $this->logged_user_id);
 
-    $query = "insert into friendship (id_a,id_b,relation,dt_created) values($a_id,$b_id,'" .
+    $query = "insert into tau_friendship (id_a,id_b,relation,dt_created) values($a_id,$b_id,'" .
     $relationString . "','" . date("Y-m-d H:i:s",time()) . "');";
     if($can_make_action){
         $res = $this->db->makeQuery($query);
@@ -229,7 +218,7 @@ protected function deletePreviousRelation($n,$z){
    */
   public function areFriends($n,$z){
     if($n < $z){ $a = $n; $b = $z;}else{$a = $z;$b = $n;}
-    $query = "select id_rel from friendship where id_a=$a and id_b=$b and " .
+    $query = "select id_rel from tau_friendship where id_a=$a and id_b=$b and " .
     " relation='friends' limit 1";
     $id_of_relation = $this->db->getRow($query);
     
@@ -243,11 +232,16 @@ protected function deletePreviousRelation($n,$z){
   /**
    * Get all the friends of a user
    * @param int $a The id of the user to get the friends of
+   * @param int $limit Limit the max results to this integer
    * @return array Associative array with key => username value => id of all the friends of $a. ( False if no friends )
    */
-  public function getFriends($user_id){
+  public function getFriends($user_id, $limit = false){
      $baseList ="";
-     $query = "select id_a,id_b from friendship where (id_a=$user_id or id_b=$user_id) and relation='friends'";
+      $sqlLimit ='';
+     if($limit !== false){
+         $sqlLimit = " limit $limit";
+     }
+     $query = "select id_a,id_b from tau_friendship where (id_a=$user_id or id_b=$user_id) and relation='friends' $sqlLimit";
      $endList = array();
 
      $res = $this->db->getResults($query);
@@ -265,12 +259,10 @@ protected function deletePreviousRelation($n,$z){
 
      $query = "select * from tau_user where bo_active=1 and " .
      " ui_id_user in(" . $baseList . ");";
-     if(DEBUG_MODE){
-         //error_log("<LuFriendShip.php>.getFriends($user_id) query: " . $query );
-     }
+
      $result = $this->db->getResults($query);
      
-     $userDataQuery = "select * from user_data where id_user in(" . $baseList . ");";
+     $userDataQuery = "select * from tau_user_data where id_user in(" . $baseList . ");";
      
      $resultData = $this->db->getResults($userDataQuery);
      
@@ -282,29 +274,27 @@ protected function deletePreviousRelation($n,$z){
          
         foreach($result as $row){
          $endList['user'][$row['ui_id_user']] = $row;
-         //$endList[$row['vc_username'] . "_full"] = $row['vc_name'] . " " . $row['vc_surname'];
-         //$endList[$row['vc_name'] . " " . $row['vc_surname'] . " ( " . $row['vc_username'] . " )"] = $row['ui_id_user'];
-         //$endList[$row['vc_name'] . " " . $row['vc_surname']] = $row['ui_id_user'];
         }
      }else{
          return false;
      }
 
-
      return $endList;
-
-
-
   }
 
    /**
    * Get all the friendship requests of a user
    * @param int $a The id of the user to get the friends of
-   * @return array Associative array with key => username value => id of all the friends of $a. ( False if no friends )
+   * @param int $limit Limit the max results to this integer
+   * @return array Associative array with key => username value => id of all the fr requests of $a. ( False if no friends )
    */
-  public function getFriendshipRequests($user_id){
-     $baseList ="";
-     $query = "select id_a,id_b from friendship where (id_a=$user_id and relation='b_to_a') or (id_b=$user_id and relation='a_to_b');";
+  public function getFriendshipRequests($user_id, $limit = false){
+     $baseList ='';
+     $sqlLimit ='';
+     if($limit !== false){
+         $sqlLimit = " limit $limit";
+     }
+     $query = "select id_a,id_b from tau_friendship where (id_a=$user_id and relation='b_to_a') or (id_b=$user_id and relation='a_to_b') $sqlLimit";
      $endList = array();
 
      $res = $this->db->getResults($query);
@@ -313,40 +303,28 @@ protected function deletePreviousRelation($n,$z){
      }
      foreach($res as $row){
          if($row['id_a']==$user_id){
-             $baseList .= $row['id_b'] . ",";
+             $baseList .= $row['id_b'] . ',';
          }else{
-             $baseList .= $row['id_a'] . ",";
+             $baseList .= $row['id_a'] . ',';
          }
      }
-     $baseList = trim($baseList,",");
-     //Limit query to 10 max pending friendship requests
-     $totalBaseList = implode(",",$baseList);
-
-     if(count($totalBaseList) > 10){
-         $baseList = "";
-         foreach($totalBaseList as $val){
-             $baseList .= $val . ",";
-         }
-     }
-     $baseList = trim($baseList,",");
+     $baseList = trim($baseList,',');
      
      $query = "select * from tau_user where " .
      " ui_id_user in(" . $baseList . ");";
      if(DEBUG_MODE){
-         error_log("<LuFriendShip.php>.getFriendShipRequest($user_id) query: " . $query );
+         error_log("<TauFriendShip.php>.getFriendShipRequest($user_id) query: " . $query );
      }
      $result = $this->db->getResults($query);
      if($result){
         foreach($result as $row){
-         //$endList[$row['vc_username']] = $row['ui_id_user'];
-         //$endList[$row['vc_username'] . "_fullname"] = $row['vc_name'] . " " . $row['vc_surname'];
          $endList['user'][$row['ui_id_user']] = $row;
         }
      }else{
          return false;
      }
 
-     $userDataQuery = "select * from user_data where id_user in(" . $baseList . ");";
+     $userDataQuery = "select * from tau_user_data where id_user in(" . $baseList . ");";
      
      $resultData = $this->db->getResults($userDataQuery);
      
@@ -366,14 +344,8 @@ protected function deletePreviousRelation($n,$z){
 
   protected function dlog($message,$method){
       if(DEBUG_MODE){
-         error_log("<LuFriendShip::$method()>" . $message );
+         error_log("<TauFriendShip::$method()>" . $message );
      }
   }
 
 }
-
-
-
-
-
-?>
