@@ -12,9 +12,9 @@
  */
 
 $urlMap = array(
-    '/en/' => 'controllers/index/index.php',
-    '/en\/enter\/?/' => 'controllers/index/index.php',
-    '/en\/register\/?/' => 'controllers/general/login.php',
-    '/en\/search\/?/' => 'controllers/index/index.php',
-    '/en\/test\/locals\-(.*)\/(.*)/' => 'controllers/general/login.php'
+    '/\/en/' => 'controllers/index/index.php',
+    '/\/en\/enter\/?/' => 'controllers/index/index.php',
+    '/\/en\/register\/?/' => 'controllers/general/login.php',
+    '/\/en\/search\/?/' => 'controllers/index/index.php',
+    '/\/en\/test\/locals\-(.*)\/(.*)/' => 'controllers/general/login.php'
 );
