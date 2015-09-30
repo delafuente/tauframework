@@ -1,5 +1,4 @@
 <?php
-session_start();
 /**
  * 
  * @abstract Class to automate uploaded files handling and securing
@@ -89,18 +88,19 @@ public function getFileNamePath(){
 * inside each one( i.e: 2010_june ). This function will check for allowed extensions, mime types, exif, not executable extensions 
 * present in path ( image.php.jpg will be rejected ), file size, and max dimensions ( width and height ). See the
 * inc/settings.php file for more info.
-* @param String     nameFileInput   The file input name
-* @param String     username        The user nick, if not specified will try to use $_SESSION['name_user'].
-* @param Boolean    overwrite       If true, will overwrite file if exists
-* @param Boolean    makeThumb       If true, and LU_MAKE_THUMBS constant true, will make a thumb
-* @param Integer    thumbWidth      The thumb width in pixeles
-* @param Integer    thumbHeight     The thumb height in pixeles
-* @param Integer    thumbQuality    The thumb quality, from 1 to 99. For png will be automatically rounded to 0-9 (see createThumb())
+* @param String     $fileInputName   The file input name
+* @param String     $username        The user nick, if not specified will try to use $_SESSION['name_user'].
+* @param Boolean    $overwrite       If true, will overwrite file if exists
+* @param Boolean    $makeThumb       If true, and LU_MAKE_THUMBS constant true, will make a thumb
+* @param Integer    $thumbWidth      The thumb width in pixeles
+* @param Integer    $thumbHeight     The thumb height in pixeles
+* @param Integer    $thumbQuality    The thumb quality, from 1 to 99. For png will be automatically rounded to 0-9 (see createThumb())
 * @version 2010/06/17
 * 
 */
 
-function saveImageFile($nameFileInput,
+function saveImageFile(
+            $fileInputName,
             $username=false,
             $overwrite=false,
             $makeThumb=true,
@@ -108,8 +108,15 @@ function saveImageFile($nameFileInput,
             $thumbHeight=LU_THUMBS_HEIGHT,
             $thumbQuality=LU_THUMBS_QUALITY){
     
+    $nameFile = $fileInputName;
+    //Check that we have a file
+    if(empty($_FILES[$nameFile]) || $_FILES[$nameFile]['error'] != 0) {
+        $errorCode=true;
+        $this->logger->put("Error: No file uploaded for input: " . $nameFile );
+        return false;
+    }
     
-    $nameFile = $nameFileInput;
+    
     if($username){
         $usname = mb_strtolower($username);
     }else{
@@ -159,8 +166,7 @@ function saveImageFile($nameFileInput,
     $allowExif[1] = IMAGETYPE_GIF;
     $allowExif[2] = IMAGETYPE_PNG;
     
-    //Check that we have a file
-    if((!empty($_FILES[$nameFile])) && ($_FILES[$nameFile]['error'] == 0)) {
+    
       
       $filename = basename($_FILES[$nameFile]['name']);
       $this->logger->put("\nfilename: $filename\n");
@@ -301,13 +307,7 @@ function saveImageFile($nameFileInput,
             $this->logger->put("<p>" . $errMsg . "</p>");
          return  utf8_encode("<p>" . $errMsg . "</p>");
       }
-    } else {
-        $errorCode=true;
-        $this->logger->put("Error: No file uploaded for input: " . $nameFileInput );
-        $errMsg = "No file uploaded for input: $nameFileInput";
-        return utf8_encode("<p>" . $errMsg . "</p>");
-
-    }
+    
     
         unlink($_FILES[$nameFile]['tmp_name']);
     
@@ -627,14 +627,14 @@ function watermark($originFile,$destFile,$watermarkFile,$xPosPercent,$yPosPercen
     imagedestroy($watermark);  
     return true;
 }
-/** Incomplete */
+
 function resizeImage($imagenOriginal, $archivodestino, $maxSideSize, $calidadcompresion=99){
-    //$formato = strtolower(substr($imagenOriginal, strpos($imagenOriginal, ".", strlen($imagenOriginal)-5)+1)); //as� recuperamos el formato del archivo
-	$originalName = basename($imagenOriginal);
+
+    $originalName = basename($imagenOriginal);
     $formatArr = explode(".",$originalName);
     $pngQuality = intval($calidadcompresion/10);
     if($pngQuality>=10){ $pngQuality=9; }
-        $pngQuality = 9-$pngQuality;
+    $pngQuality = 9-$pngQuality;
         
         $this->output .= "\n** Quality: " . $calidadcompresion;
         $this->output .= "\n** pngQuality: " . $pngQuality;
@@ -643,33 +643,38 @@ function resizeImage($imagenOriginal, $archivodestino, $maxSideSize, $calidadcom
     $formato = strtolower(end($formatArr));
         $this->output .= "<p>Formato imagen: " . $formato . "</p>";
         //$this->logger->put("Output: " . $this->output);
+    $pic = false;
+    
     if($formato == 'jpg' || $formato == 'jpeg'){
-		$pic = imagecreatefromjpeg($imagenOriginal) or $this->output .= "\n\nError en imagecreatefromjpeg" . "<p>" . "</p>";
-	}else if($formato == 'gif'){
-		$pic = imagecreatefromgif($imagenOriginal) or $this->output .= "\n\nError en imagecreatefromgif" . "<p>" . "</p>";
-	}else if($formato == 'png'){
-		$pic = imagecreatefrompng($imagenOriginal) or $this->output .= "\n\nError en imagecreatefrompng" . "<p>" . "</p>";
+                $pic = imagecreatefromjpeg($imagenOriginal) or $this->output .= "\n\nError en imagecreatefromjpeg" . "<p>" . "</p>";
+        }else if($formato == 'gif'){
+                $pic = imagecreatefromgif($imagenOriginal) or $this->output .= "\n\nError en imagecreatefromgif" . "<p>" . "</p>";
+        }else if($formato == 'png'){
+                $pic = imagecreatefrompng($imagenOriginal) or $this->output .= "\n\nError en imagecreatefrompng" . "<p>" . "</p>";
     }
-	$width = imagesx($pic);	
-	$height = imagesy($pic);
-        if($width <= $maxSideSize && $height <= $maxSideSize){
-            //We don't need to resize
-            imagedestroy($pic);
-            return 0;
+    if(!$pic){
+        return false;
+    }
+    $width = imagesx($pic);	
+    $height = imagesy($pic);
+    if($width <= $maxSideSize && $height <= $maxSideSize){
+        //We don't need to resize
+        imagedestroy($pic);
+        return 0;
+    }
+        if($width > $height){
+            $fw = $maxSideSize;
+            $fh = round($maxSideSize * $height / $width,0);
+        }else{
+            $fh = $maxSideSize;
+            $fw = round($maxSideSize * $width / $height,0);
         }
-            if($width > $height){
-                $fw = $maxSideSize;
-                $fh = round($maxSideSize * $height / $width,0);
-            }else{
-                $fh = $maxSideSize;
-                $fw = round($maxSideSize * $width / $height,0);
-            }
-        
 
-	
-	$imagenorigen=$pic;
- 
-	$imagendestino=imagecreatetruecolor($fw, $fh)  or $this->logger->put("\n\nError en imagecreatetruecolor");
+
+
+    $imagenorigen=$pic;
+
+    $imagendestino=imagecreatetruecolor($fw, $fh)  or $this->logger->put("\n\nError en imagecreatetruecolor");
 	
     $white = ImageColorAllocate($imagendestino, 255, 255, 255);
     ImageFill($imagendestino, 0, 0, $white);

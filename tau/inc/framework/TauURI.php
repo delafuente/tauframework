@@ -17,10 +17,12 @@ class TauURI {
     public static $parameters;
     public static $parametersCount;
     public static $langOnURI = false;
+    public static $request_uri =false;
     
     public static function parseURI(){
         
         $request = $_SERVER['REQUEST_URI'];    
+        self::$request_uri = self::sanitizeUrl($_SERVER['REQUEST_URI']);
         
         $urlElements = self::parseRequest($request);
         $urlParts = $urlElements['urlParts'];
@@ -33,6 +35,10 @@ class TauURI {
         
         TauMessages::addNotice("url parts: " . print_r($urlParts, true), "TauURI::parseURI()");
         TauMessages::addNotice("parameters: " . print_r($parameters, true), "TauURI::parseURI()"); 
+    }
+    
+    public static function getRequestURI(){
+        return self::$request_uri;
     }
     
     protected static function getParameters($string){
@@ -70,6 +76,7 @@ class TauURI {
             $requestParts[0] = trim($requestParts[0], "/");
             $requestParts[0] = self::sanitizeUrl($requestParts[0]);
             $urlParts = explode("/",$requestParts[0]);
+            $urlParts[0] = '/'.$urlParts[0];
             
             if( in_array($urlParts[1], $allowedLangs) ){
                 self::$langOnURI = $urlParts[1];

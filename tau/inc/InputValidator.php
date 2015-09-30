@@ -33,26 +33,24 @@ class InputValidator {
     protected $languageLoader; //LanguageLoader object
     protected static $localization;
     protected $mysqlDates = false; //date gets Y-m-d to be sanely inserted in mysql
+    protected $changeDatesFormat = false;
     /**
      * Creates an InputValidator object
-     * @param type $inputArray The array to clean, normally $_GET,$_POST or $_REQUEST
-     * @param type $redirectOnErrors If true, will redirect to a page of error
-     * @param type $dataManager DataManager object to clean with mysql_escape
+     * @param array $inputArray The array to clean, normally $_GET,$_POST or $_REQUEST
+     * @param bool $adaptDatesToMySQL Modify the received date from current localization to MySQL format
+     * @param bool $redirectOnErrors If true, will redirect to a page of error
      */
 
-    function __construct($inputArray, $redirectOnErrors = true, $dataManager = false) {
+    function __construct($inputArray, $adaptDatesToMySQL = true, $redirectOnErrors = true) {
         
         $this->inputArray = $inputArray;
         $this->numInputs = count($this->inputArray);
         $this->isCorrect = true;
         $this->errors = array();
         $this->redirectOnErrors = $redirectOnErrors;
-
-        if ($dataManager instanceof DataManager) {
-            $this->db = $dataManager;
-        } else {
-            $this->db = DataManager::getInstance();
-        }
+        $this->db = DataManager::getInstance();
+        $this->changeDatesFormat = $adaptDatesToMySQL;
+        
         $this->languageLoader = LanguageLoader::getInstance();
         $labels = $this->languageLoader->getTranslations('lang_labels', APPLICATION_BASE_URL, Tau::getInstance()->getLang());
         
@@ -140,6 +138,9 @@ class InputValidator {
 
     protected function applyFormRules( array $input, array $validationTexts ){
         
+        if(!isset($input['form_hash'])){
+            return false;
+        }
         $hash = $input['form_hash'];
         $valNames = TauSession::get("validationFor_$hash"."_names") ;
         $valRules = TauSession::get("validationFor_$hash"."_rules") ;
@@ -389,6 +390,10 @@ class InputValidator {
     
     public static function validateDate($date) {
         
+        if(!$this->changeDatesFormat){
+            return $date;
+        }
+        
         $separator = self::getDateSeparator($date);
 
         if($separator == ""){
@@ -455,7 +460,8 @@ class InputValidator {
         }
 
         // now the only remaining whitespace attacks are \t, \n, and \r
-        $ra1 = Array('javascript', 'vbscript', 'expression', 'applet', 'xml', 'blink', 'iframe', 'frameset', 'ilayer', 'bgsound');
+        //$ra1 = Array('javascript', 'vbscript', 'expression', 'applet', 'xml', 'blink', 'iframe', 'frameset', 'ilayer', 'bgsound');
+        $ra1 = array();
         $ra2 = Array('onabort', 'onactivate', 'onafterprint', 'onafterupdate', 'onbeforeactivate', 'onbeforecopy', 'onbeforecut', 'onbeforedeactivate', 'onbeforeeditfocus', 'onbeforepaste', 'onbeforeprint', 'onbeforeunload', 'onbeforeupdate', 'onblur', 'onbounce', 'oncellchange', 'onchange', 'onclick', 'oncontextmenu', 'oncontrolselect', 'oncopy', 'oncut', 'ondataavailable', 'ondatasetchanged', 'ondatasetcomplete', 'ondblclick', 'ondeactivate', 'ondrag', 'ondragend', 'ondragenter', 'ondragleave', 'ondragover', 'ondragstart', 'ondrop', 'onerror', 'onerrorupdate', 'onfilterchange', 'onfinish', 'onfocus', 'onfocusin', 'onfocusout', 'onhelp', 'onkeydown', 'onkeypress', 'onkeyup', 'onlayoutcomplete', 'onload', 'onlosecapture', 'onmousedown', 'onmouseenter', 'onmouseleave', 'onmousemove', 'onmouseout', 'onmouseover', 'onmouseup', 'onmousewheel', 'onmove', 'onmoveend', 'onmovestart', 'onpaste', 'onpropertychange', 'onreadystatechange', 'onreset', 'onresize', 'onresizeend', 'onresizestart', 'onrowenter', 'onrowexit', 'onrowsdelete', 'onrowsinserted', 'onscroll', 'onselect', 'onselectionchange', 'onselectstart', 'onstart', 'onstop', 'onsubmit', 'onunload');
         $ra = array_merge($ra1, $ra2);
 
@@ -486,5 +492,3 @@ class InputValidator {
     }
 
 }
-
-?>

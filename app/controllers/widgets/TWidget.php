@@ -18,13 +18,15 @@ class TWidget implements IWidget {
     protected $tauCache;
     protected $useCache;
     protected $lang;
+    protected $extraParams;
     
-    public function __construct(PageRender $oRender, Replacer $oReplacer, $useCache = false) {
+    public function __construct(PageRender $oRender, Replacer $oReplacer, $useCache = false, $extraParams = false) {
         $this->oRender = $oRender;
         $this->oReplacer = $oReplacer;
         $this->tauCache = $oRender->cache();
         $this->useCache = $useCache;
         $this->lang = Tau::getInstance()->getLang();
+        $this->extraParams = $extraParams;
         $this->process();
     }
     public function getFileFromCache( $filePath ){
@@ -43,5 +45,3 @@ class TWidget implements IWidget {
     }
     
 }
-
-?>
