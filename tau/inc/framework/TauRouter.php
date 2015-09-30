@@ -22,7 +22,7 @@ class TauRouter {
         $tauContext['lang'] = $lang;
         $controller = false;
         //Try Universal search
-
+        
         $controller = self::testRoutes($mapList, $path);
         if($controller){
             return TauDispatcher::dispatch($controller, TauRequest::getParams(), $tauContext);
@@ -35,7 +35,7 @@ class TauRouter {
         } else {
             $urlMap = array($path => "/controllers/general/404.php");
         }
-
+        
         $controller = self::testRoutes($urlMap, $path);
         if($controller){
             return TauDispatcher::dispatch($controller, TauRequest::getParams(), $tauContext);
@@ -51,7 +51,7 @@ class TauRouter {
         foreach ($mapList as $urlPattern => $controller) {
 
             TauMessages::addNotice("urlPattern: '$urlPattern' and controller: $controller and path: $path", 'TauRouter::route()');
-
+            
             if (preg_match($urlPattern, $path, $dump)) {
                 
                 TauMessages::addNotice("Encontrado : " . print_r($dump, true), "TauRouter::testRoutes()");

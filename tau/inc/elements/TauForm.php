@@ -25,6 +25,7 @@ class TauForm {
     protected $defaultTheme;
     protected $themeMapping;
     protected $formTitle;
+    protected $method;
     
     protected $htmlBefore; //html to be prepended to the form
     protected $htmlAfter; //html to be appended to the form
@@ -71,7 +72,7 @@ class TauForm {
         $this->name = $name;
 
         $this->encType = $enctype;
-        
+        $this->method = 'post';
         if($extraAttributes){
             foreach($extraAttributes as $extraKey => $extraValue){
                 $this->extraFormAttributes[$extraKey] = $extraValue;
@@ -107,6 +108,12 @@ class TauForm {
      */
     public function allowSubmitOnEnter(){
         $this->allowSubmitOnEnter = true;
+    }
+    public function setMethod( $method ){
+        $method = strtolower($method);
+        if($method == 'get'){
+            $this->method = 'get';
+        }
     }
     /**
      * For existing data, get the row information to show in form
@@ -701,7 +708,7 @@ class TauForm {
         
         $html .= $this->getTemplate('form', $this->formTheme);
         $attributeReplacements = array('{replace_id}','{replace_name}','{replace_action}','{replace_method}', '{replace_enctype}', '{extra_attributes}');
-        $attributeReplacers = array($this->id, $this->name, $this->action, 'post', $this->encType, $extraAttributes);
+        $attributeReplacers = array($this->id, $this->name, $this->action, $this->method, $this->encType, $extraAttributes);
         $html = str_replace($attributeReplacements, $attributeReplacers, $html);
 
         $i=-1;
