@@ -22,22 +22,17 @@ class DataManager {
     protected $db_user;
     protected $lastErrorMessage;
     protected $lastErrorTrace;
-    protected $queryLog;
+    protected static $queryLog = array();
     private static $uniqueInstance = null;
+    protected static $otherInstances = array();
     
     protected function __construct($db_name = false, $db_host = false, $db_pass = false, $db_user = false){
         
-        $this->db_name = $db_name;
-        $this->db_host = $db_host;
-        $this->db_pass = $db_pass;
-        $this->db_user = $db_user;
         
-        $this->queryLog = array();
-        
-        if(!$db_name){ $this->db_name = DB_NAME; }
-        if(!$db_host){ $this->db_host = DB_HOST; }
-        if(!$db_pass){ $this->db_pass = DB_ADMIN_PASSWD; }
-        if(!$db_user){ $this->db_user = DB_ADMIN; }
+        if(!$db_name){ $this->db_name = DB_NAME; }else{ $this->db_name = $db_name; }
+        if(!$db_host){ $this->db_host = DB_HOST; }else{ $this->db_host = $db_host; }
+        if(!$db_pass){ $this->db_pass = DB_ADMIN_PASSWD; }else{ $this->db_pass = $db_pass; }
+        if(!$db_user){ $this->db_user = DB_ADMIN; }else{ $this->db_user = $db_user; }
                 
         $this->db = new ezSQL_mysql($this->db_user, $this->db_pass, $this->db_name, $this->db_host, "UTF-8");
         $this->lastErrorMessage = "NO ERROR";
@@ -70,12 +65,20 @@ class DataManager {
         
         if(self::$uniqueInstance === null || $db_name !== false){
             if($db_name !== false){
-                $instance = new DataManager($db_name, $db_host, $db_pass, $db_user);
-                Tau::addDbInstance($instance);
+                if( isset(self::$otherInstances[$db_name]) ){
+                    $instance = self::$otherInstances[$db_name];
+                }else{
+                    $instance = new DataManager($db_name, $db_host, $db_pass, $db_user);
+                    Tau::addDbInstance($instance);
+                    self::$otherInstances[$db_name] = $instance;
+                }
                 return $instance;
             }
             self::$uniqueInstance = new DataManager();
             Tau::addDbInstance(self::$uniqueInstance);
+            //prevent generating other instance for default database
+            //if called with db_name parameter
+            self::$otherInstances[DB_NAME] = self::$uniqueInstance;
         }
         
         return self::$uniqueInstance;
@@ -85,27 +88,26 @@ class DataManager {
         self::$uniqueInstance = null;
     }
     
-    public function getRow($query,$returnAs=ARRAY_A){
-        
-        if(DEBUG_MODE){ $r=mt_rand(0,1000); $this->queryLog[date("Y-m-d H:i:s",time())."_$r".uniqid()] = $query; }
+    public function getRow($query, $returnAs=ARRAY_A){
+        self::addToQueryLog($query);
         $res = $this->db->get_row($query,$returnAs);
         return $this->getQueryResult($res);
     }
 
-    public function getResults($query,$returnAs=ARRAY_A){
-        if(DEBUG_MODE){ $r=mt_rand(0,1000); $this->queryLog[date("Y-m-d H:i:s",time())."_$r".uniqid()] = $query; }
+    public function getResults($query, $returnAs=ARRAY_A){
+        self::addToQueryLog($query);
         $res = $this->db->get_results($query,$returnAs);
         return $this->getQueryResult($res);
     }
     
-    public function getVar($query,$returnAs=ARRAY_A){
-        if(DEBUG_MODE){ $r=mt_rand(0,1000); $this->queryLog[date("Y-m-d H:i:s",time())."_$r".uniqid()] = $query; }
+    public function getVar($query, $returnAs=ARRAY_A){
+        self::addToQueryLog($query);
         $res = $this->db->get_var($query);
         return $this->getQueryResult($res);
     }
 
     public function makeQuery($query){
-        if(DEBUG_MODE){ $r=mt_rand(0,1000); $this->queryLog[date("Y-m-d H:i:s",time())."_$r".uniqid()] = $query; }
+        self::addToQueryLog($query);
         $res = $this->db->query($query);
         return $this->getQueryResult($res, $query);
     }
@@ -116,8 +118,8 @@ class DataManager {
      * @param string $value_field The field that is going to be used as value of the array
      * @return mixed Assoc array with results, of false if no results
      */
-    public function getList($query,$key_field,$value_field){
-        if(DEBUG_MODE){ $r=mt_rand(0,1000); $this->queryLog[date("Y-m-d H:i:s",time())."_$r".uniqid()] = $query; }
+    public function getList($query, $key_field, $value_field){
+        self::addToQueryLog($query);
         $res = $this->db->get_results($query,ARRAY_A);
         $list = array();
         $elems = count($res);
@@ -139,8 +141,8 @@ class DataManager {
      * @param string $value_field The field that is going to be used as value of the array
      * @return mixed Assoc array with results, of false if no results
      */
-    public function getListAndFull($query,$key_field,$value_field){
-        if(DEBUG_MODE){ $r=mt_rand(0,1000); $this->queryLog[date("Y-m-d H:i:s",time())."_$r".uniqid()] = $query; }
+    public function getListAndFull($query, $key_field, $value_field){
+        self::addToQueryLog($query);
         $res = $this->db->get_results($query,ARRAY_A);
         $list = array();
         $elems = count($res);
@@ -160,8 +162,8 @@ class DataManager {
      * Starts a transaction
      */
     public function beginTransaction(){
-        if(DEBUG_MODE){ $r=mt_rand(0,1000); $this->queryLog[date("Y-m-d H:i:s",time())."_$r".uniqid()] = "START TRANSACTION;"; }
-        $this->db->query("START TRANSACTION;");
+        self::addToQueryLog('START TRANSACTION;');
+        $this->db->query('START TRANSACTION;');
     }
     /**
      * Commits a previously started transaction.
@@ -169,16 +171,16 @@ class DataManager {
      * use rollback() otherwise
      */
     public function commit(){
-        if(DEBUG_MODE){ $r=mt_rand(0,1000); $this->queryLog[date("Y-m-d H:i:s",time())."_$r".uniqid()] = "COMMIT;"; }
-        $this->db->query("COMMIT");
+        self::addToQueryLog('COMMIT;');
+        $this->db->query('COMMIT');
     }
     /**
      * Use it when in transaction, and something went wrong.
      * Will roll back any changes to the db in current transaction.
      */
     public function rollback(){
-        if(DEBUG_MODE){ $r=mt_rand(0,1000); $this->queryLog[date("Y-m-d H:i:s",time())."_$r".uniqid()] = "ROLLBACK;"; }
-        $this->db->query("ROLLBACK");
+        self::addToQueryLog('ROLLBACK;');
+        $this->db->query('ROLLBACK');
     }
     /**
      * Process a queries array within a transaction
@@ -209,7 +211,7 @@ class DataManager {
      * @param string $query The query to execute
      */
     protected function doTransactionQuery($query){
-        if(DEBUG_MODE){ $r=mt_rand(0,1000); $this->queryLog[date("Y-m-d H:i:s",time())."_$r".uniqid()] = $query; }
+        self::addToQueryLog($query);
         $res = $this->db->query($query);
 
         return $res;
@@ -219,7 +221,7 @@ class DataManager {
      * @return array List of all queries executed, if DEBUG_MODE = true
      */
     public function getExecutedQueries(){
-        return $this->queryLog;
+        return self::$queryLog;
     }
     public function escape($vars){
         if(is_array($vars)){
@@ -244,7 +246,6 @@ class DataManager {
         return $this->lastErrorTrace;
     }
     public function close(){
-        //echo "<p>DataManager close() for database " . $this->getDataBaseName() . "</p>";
         $this->db->disconnect();
     }
     public function getAffectedRows(){
@@ -256,7 +257,7 @@ class DataManager {
      * @param resource $res The result of a query
      * @return mixed false if fails, result of query otherwise
      */
-    protected function getQueryResult($res, $query = ""){
+    protected function getQueryResult($res){
         if($res === false){
             if($this->db->rows_affected === -1){
                 $this->lastErrorMessage = "Sentence don't modified rows";
@@ -267,6 +268,16 @@ class DataManager {
             return false;
         }else{
             return $res;
+        }
+    }
+    
+    protected static function addToQueryLog($query){
+        if(DEBUG_MODE){ 
+            $r = mt_rand(0,9999);
+            $q = mt_rand(0,9999);
+            $rnd = $r . $q;
+            $z = str_pad($rnd, 8, '0', STR_PAD_LEFT);
+            self::$queryLog[date("Y-m-d H:i:s",time())."_$z".uniqid()] = $query; 
         }
     }
 }
