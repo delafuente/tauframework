@@ -218,6 +218,9 @@ if ($replace_in_local) {
         foreach ($matches as $match) {
 
             foreach ($match as $coincidence) {
+                if(strpos($coincidence, '-') !== false){
+                    continue;
+                }
                 $file_contents = str_replace($coincidence, "{{" . Tau::tau_tokenizer($full_filename, $coincidence) . "}}", $file_contents);
             }
         }
@@ -238,4 +241,3 @@ if ($replace_in_local) {
 }
 
 echo json_encode($operations);
-?>
