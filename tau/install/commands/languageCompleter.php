@@ -88,15 +88,21 @@ foreach($currentTranslations as $key => $trans){
     $tokensFound[$trans['lang']][$trans['item']] = $trans['content'];
 }
 $_SESSION['tokensFound'] = $tokensFound;
+$onlyOnce = array();
 
 foreach($matches as $match){
    
     foreach($match as $coincidence){
         
+        if(isset($onlyOnce[$coincidence]) || strpos($coincidence, '-') !== false){
+            continue;
+        }
+        
         $formTable .= "<tr>";
         $tokens[$coincidence] = Tau::tau_tokenizer($fileRelative, $coincidence);
         $formTable .= "<td>" . $tokens[$coincidence] . "</td>";
         $text_id = 0;
+        $onlyOnce[$coincidence] = 'yes';
         foreach($allowedLangs as $lang){
             $text_id++;
             $class=" newField";
