@@ -426,6 +426,7 @@ class PageRender {
             '{replace_description}' => $this->description,
             '{replace_app}' => APP,
             '{replace_lang}' => $this->lang,
+            '{replace_country}' => Tau::getInstance()->getCountry(),
             '{replace_app_name}' => APPLICATION_NAME,
             '{replace_app_base_name}' => APPLICATION_NAME,
             '{replace_form_classes}' => 'GoogleLikeForms GLF-green',

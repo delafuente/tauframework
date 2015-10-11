@@ -18,12 +18,17 @@ class Tau {
 
     protected $environment;
     protected $lang;
+    protected $country;
+    protected $fake = null;
     private static $allDbInstances;
     private static $uniqueInstance = null;
     private static $loadedTemplates;
+    
 
-    protected function __construct() {
+    protected function __construct(array $fake = null) {
 
+        if($fake){ $this->fake = $fake; }
+        
         $current_env = self::getEnv('APPLICATION_ENVIRONMENT');
         self::$loadedTemplates = array();
         
@@ -37,18 +42,95 @@ class Tau {
                 $this->environment = 'pro';
         }
         
-        if (TauURI::$langOnURI) {
+        if($fake && isset($fake['environment'])){ 
+            $this->environment = $fake['environment']; 
+        }
+        
+        $this->determineCountry();
+        $this->determineLang();
+        
+        TauResponse::setCookie('lang', $this->lang, time() + SECONDS_ONE_YEAR, "/");
+        TauSession::put('lang', $this->lang);
+        
+    }
+    public function getFake( $key ){
+        if(isset($this->fake) && isset($this->fake[$key])){
+            return $this->fake[$key];
+        }else{
+            return false;
+        }
+    }
+    public function getCountry(){
+        return $this->country;
+    }
+    
+    protected function determineLang(){
+        
+        if( $fakeLang = $this->getFake('lang') ){
+            $this->lang = $fakeLang;
+            TauMessages::addNotice("LANG taken from FAKE lang: $this->lang", "Tau::__construct()");
+            TauResponse::setCookie('lang', $this->lang, time() + SECONDS_ONE_YEAR, "/");
+        } else if ( TauURI::$langOnURI ) {
             $this->lang = TauURI::$langOnURI;
             TauMessages::addNotice("LANG taken from URI: $this->lang", "Tau::__construct()");
-            TauResponse::setCookie('lang', TauURI::$langOnURI, time() + SECONDS_ONE_YEAR, "/");
-        } else if (TauResponse::getCookie('lang')) {
+        } else if ( TauSession::get('lang') ) {
+            $this->lang = TauSession::get('lang');
+            TauMessages::addNotice("LANG taken from SESSION: $this->lang", "Tau::__construct()");
+        }  else if ( TauResponse::getCookie('lang') ) {
             $this->lang = TauResponse::getCookie('lang');
             TauMessages::addNotice("LANG taken from COOKIE: $this->lang", "Tau::__construct()");
+        } else if( TauSession::getSub('localization', 'lang') ) {
+            $this->lang = mb_strtolower( TauSession::getSub('localization', 'lang') );
+            TauMessages::addNotice("LANG taken from DEFAULT for Country $this->country: $this->lang", "Tau::__construct()");
         } else {
             $this->lang = DEFAULT_LANG_ABBR;
-            TauMessages::addNotice("LANG taken from DEFAULT_LANG_ABBR: $this->lang", "Tau::__construct()");
-            TauResponse::setCookie('lang', DEFAULT_LANG_ABBR, time() + SECONDS_ONE_YEAR, "/");
+            TauMessages::addNotice("LANG taken from DEFAULT_LANG_ABBR: ". DEFAULT_LANG_ABBR. ", Tau::__construct()");
         }
+    }
+    
+    protected function determineCountry(){
+        
+        if($fakeCountry = $this->getFake('country')){
+            $this->country = $fakeCountry;
+            $this->addCountryToSession($fakeCountry);
+            return;
+        }
+        if($currentLoc = TauSession::get('localization')){
+            TauResponse::setCookie('country', 
+            mb_strtolower($currentLoc['country']), 
+                    time() + SECONDS_ONE_YEAR, "/");
+            return;
+        }
+        
+        if( $currentCountry = TauRequest::getCountryByIP() ){
+            $this->country = $currentCountry;
+            $this->addCountryToSession($this->country);
+        }else{
+            $accept = filter_input(
+                    INPUT_SERVER,'HTTP_ACCEPT_LANGUAGE',FILTER_SANITIZE_STRING);
+            $locale = Locale::acceptFromHttp($accept);
+            if(strpos($locale, '_') !== false){
+                $splitted = explode('_', $locale);
+                $this->country = $splitted[1];
+            }else{
+                $this->country = DEFAULT_COUNTRY;
+            }
+            $this->addCountryToSession($this->country);
+        }
+    }
+    
+    protected function addCountryToSession($country){
+        global $lang_local;
+        $db = DataManager::getInstance();
+        $countryData = $db->getRow("select * from tau_localization ".
+                "where country='$country' limit 1");
+        TauSession::put('localization', $countryData);
+        TauSession::put('country', $country);
+        TauSession::addToKey('localization', 
+                'date_format', $lang_local[$country]['date_format']);
+        TauSession::addToKey('localization', 
+                'date_first_day', $lang_local[$country]['date_first_day']);
+        TauResponse::setCookie('country', $country, time() + SECONDS_ONE_YEAR, "/");
     }
 
     private final function __clone() {
@@ -75,12 +157,13 @@ class Tau {
     
     /**
      * Get the main singleton instance
-     * @return LanguageLoader Singleton instance
+     * @param array $fake Used to fake country, lang, etc
+     * @return Tau Singleton instance
      */
-    public static function getInstance() {
+    public static function getInstance(array $fake = null) {
 
         if (self::$uniqueInstance === null) {
-            self::$uniqueInstance = new Tau();
+            self::$uniqueInstance = new Tau($fake);
         }
         return self::$uniqueInstance;
     }
@@ -175,5 +258,3 @@ class Tau {
     }
 
 }
-
-?>

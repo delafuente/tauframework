@@ -33,19 +33,37 @@ class TauRouter {
         if (is_file($lang_search)) {
             require_once (WEB_PATH . "/routes/$lang/routes.php");
         } else {
-            $urlMap = array($path => "/controllers/general/404.php");
+            $urlMap = array( self::makeRegExp($path) => "/controllers/general/404.php" );
         }
         
         $controller = self::testRoutes($urlMap, $path);
         if($controller){
             return TauDispatcher::dispatch($controller, TauRequest::getParams(), $tauContext);
         }
-
+        
+        //Try natural path to file in route
+        $initPath = trim(str_replace("/$lang/", '', $path), '/');
+        $testPath = '/controllers/'.$initPath.'.php';
+        
+        if(file_exists(WEB_PATH . $testPath)){
+            $urlMap = array( self::makeRegExp($path) => $testPath );
+            $controller = self::testRoutes($urlMap, $path);
+            if($controller){
+                return TauDispatcher::dispatch($controller, TauRequest::getParams(), $tauContext);
+            }
+        }
         //URI not found
         TauMessages::addWarning("Match NOT OK: elapsed: " . self::getTime(self::$init), "TauRouter::route()");
         return TauDispatcher::dispatch('/controllers/general/404.php', TauRequest::getParams(), $tauContext);
     }
-
+    
+    protected static function makeRegExp($path){
+        $path = str_replace('/', '\/', $path);
+        $path = str_replace('-', '\-', $path);
+        $path = str_replace('.', '\.', $path);
+        return '/'.$path.'\/?/';
+    }
+    
     protected static function testRoutes($mapList, $path){
         
         foreach ($mapList as $urlPattern => $controller) {

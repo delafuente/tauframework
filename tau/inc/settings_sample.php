@@ -94,8 +94,6 @@ if (PRODUCTION_ENVIRONMENT) {
     define('MIGRATES_FOLDER', WEB_PATH . "/migrates");
     define('USE_TAU_CACHE', false);
 
-} else if (LOCAL_WITH_LAN_ACCESS) {
-    //Add here special configuration for local with LAN
 } else {
     die("<p>settings error: CONSTANTS ERROR IN config.php, PRODUCTION" .
             "_ENVIRONMENT or ONE LOCAL_WITH_* constant must be set to true</p>");
@@ -111,8 +109,10 @@ $autoloadPaths = array(
     APPLICATION_PATH . "/tau/inc/framework",
     APPLICATION_PATH . "/app/libs",
     APPLICATION_PATH . "/app/modules",
+    APPLICATION_PATH . "/app/modules/scripts",
     APPLICATION_PATH . "/app/modules/user",
     APPLICATION_PATH . "/app/modules/login",
+    APPLICATION_PATH . "/app/controllers/widgets",
     APPLICATION_PATH . "/app/controllers/widgets/web"
 );
 /** Field span error class */
@@ -122,6 +122,7 @@ define('FIELD_ERROR_CLASS', 'fieldError' );
 /** Migrates split characters, for each sql sentence */
 define('SQL_SPLIT', '-- &|6.28@tau&');
 define('CACHE_PATH', WEB_PATH . "/cache");
+
 /** Database Charset to use in creating database tables. */
 define('DB_CHARSET', 'utf8');
 /** The Database Collate type. Don't change this if in doubt. */
@@ -138,9 +139,10 @@ define('KILOBYTES', 1024);
 define('MEGABYTES', 1048576);
 define('SECONDS_ONE_HOUR', 3600);
 define('SECONDS_ONE_DAY', 86400);
-define('SECONDS_ONE_MONTH', false); //2592200
 if (!LOCAL_WITH_LOCALHOST) {
     define('SECONDS_ONE_MONTH', 2592200);
+}else{
+    define('SECONDS_ONE_MONTH', false); //2592200
 }
 define('SECONDS_ONE_YEAR', 31104400);
 
@@ -174,18 +176,18 @@ define('WATERMARK_CENTERED',true); //Centers both vertical and horizontal
 define('WATERMARK_X_PERCENT',2); //If not centered, the x position of watermark in %
 define('WATERMARK_Y_PERCENT',45); //If not centered, the x position of watermark in %
 /** mail config */
-define('MAIL_SMTP_HOST', 'smtp.' . APP);
-define('MAIL_POP3_HOST', 'pop3.' . APP);
-define('MAIL_IMAP_HOST', 'mail.' . APP);
-define('CONTACT_TO_RECIPIENT', 'contact@' . APP);
-define('WEBMASTER_MAIL', 'contact@' . APP);
+define('MAIL_SMTP_HOST', 'smtp.' . APPLICATION_NAME);
+define('MAIL_POP3_HOST', 'pop3.' . APPLICATION_NAME);
+define('MAIL_IMAP_HOST', 'mail.' . APPLICATION_NAME);
+define('CONTACT_TO_RECIPIENT', 'contact@' . APPLICATION_NAME);
+define('WEBMASTER_MAIL', 'contact@' . APPLICATION_NAME);
 define('WEBMASTER_MAIL_PASSWORD', '****');
-define('ERROR_MAIL', 'contact@' . APP);
-define('ERROR_RECIPIENT_MAIL', 'yourmail@example.com');
-define('INFO_MAIL', 'contact@' . APP);
+define('ERROR_MAIL', 'error' . APPLICATION_NAME);
+define('ERROR_RECIPIENT_MAIL', 'error@' . APPLICATION_NAME);
+define('INFO_MAIL', 'contact@' . APPLICATION_NAME);
 define('INFO_MAIL_PASSWORD', '****');
-define('REGISTER_FORM_MAIL', 'register@' . APP);
-define('REGISTER_FORM_MAIL_POP', 'register%' . APP);
+define('REGISTER_FORM_MAIL', 'register@' . APPLICATION_NAME);
+define('REGISTER_FORM_MAIL_POP', 'register%' . APPLICATION_NAME);
 define('REGISTER_FORM_MAIL_PASSWORD', '****');
 define('IS_GMAIL_REGISTER_ACCOUNT', false);
 /** others */
@@ -196,9 +198,21 @@ define('LU_DEFAULT_LANG_CODE', 'es_ES');
 /** Friendship module */
 define('ALLOW_RECONCILIATIONS', true); //If true, a broken relationship could be requested again
 define('MAX_FRIENDS_ON_SIDEBAR', 30); //If you show a list of friends, this is the showed limit
+
+define('CACHE_SECONDS_LIFETIME',3600);
+define('ALLOW_FORM_DATA_REFRESH',true);
+
+// LOAD THIS IN CREDENTIALS FILES, one for environment
 /* Recaptcha config, if you want to use into application, it's integrated with forms */
 define('RECAPTCHA_PUBLIC_KEY', 'your public key');
 define('RECAPTCHA_PRIVATE_KEY', 'your private key');
-define('CACHE_SECONDS_LIFETIME',3600);
-define('ALLOW_FORM_DATA_REFRESH',true);
 define('GOOGLE_ANALYTICS_UID','test');
+
+//Lang based configuration for dates, doesn't rely on country
+//we can have country = de ( Germany ), and lang = at ( Austriac ), with different
+//date formats. Date validation will use this format, and datepicker-{replace_lang} must
+//use the same values, or validation will be wrong.
+$lang_local = array(
+  'es' => array('date_format' => 'dd/mm/yy', 'date_first_day' => 1),
+  'en' => array('date_format' => 'yy/mm/dd', 'date_first_day' => 0)
+);
