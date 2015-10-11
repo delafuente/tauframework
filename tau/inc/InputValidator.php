@@ -62,20 +62,8 @@ class InputValidator {
         
         $inputArray = $this->db->escape($inputArray);
         
-        $localization = unserialize( TauResponse::getCookie('localization') );
-        if(!$localization){
-            $loc = $this->db->getRow("select * from tau_localization where name='"
-                .strtoupper(Tau::getInstance()->getLang()). "' limit 1;");
-            
-            self::$localization = $loc;
-            TauResponse::setCookie(
-                    'localization', 
-                    serialize($loc), 
-                    SECONDS_ONE_YEAR, 
-                    LU_COOKIE_PATH, 
-                    LU_COOKIE_DOMAIN);
-        }
-        
+        self::$localization = TauSession::get('localization');
+
         if(!empty($_FILES)){
             foreach($_FILES as $nFile => $eFile){
                 $inputArray[$nFile] = $eFile['name'];
