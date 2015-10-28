@@ -121,6 +121,7 @@ class Tau {
     
     protected function addCountryToSession($country){
         global $lang_local;
+        $country = mb_strtolower($country);
         $db = DataManager::getInstance();
         $countryData = $db->getRow("select * from tau_localization ".
                 "where country='$country' limit 1");

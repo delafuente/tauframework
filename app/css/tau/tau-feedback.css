@@ -7,7 +7,7 @@
     display: none;
     z-index: 999999 !important;
     font-family: monospace, serif;
-    font-size: 1em;
+    font-size: 1em !important;
     width: 100%;
     overflow-y: scroll;
     height: 100%;
@@ -46,6 +46,9 @@
 
 .span-path{
     color:#d5d5d5;
+}
+.span-bold{
+    font-weight: 900;
 }
 .tau-symbol{
     width:32px;
