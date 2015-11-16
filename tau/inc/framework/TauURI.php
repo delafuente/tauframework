@@ -72,15 +72,17 @@ class TauURI {
         if(strpos($request, "?") !== false){
             
             $requestParts = explode("?", $request);
-            $parameters = self::getParameters($requestParts[1]);            
+            $parameters = self::getParameters($requestParts[1]);  
             $requestParts[0] = trim($requestParts[0], "/");
             $requestParts[0] = self::sanitizeUrl($requestParts[0]);
             $urlParts = explode("/",$requestParts[0]);
-            $urlParts[0] = '/'.$urlParts[0];
             
-            if( in_array($urlParts[1], $allowedLangs) ){
-                self::$langOnURI = $urlParts[1];
+            
+            if( in_array($urlParts[0], $allowedLangs) ){
+                self::$langOnURI = $urlParts[0];
             }
+            
+            $urlParts[0] = '/'.$urlParts[0];
             return array('urlParts' => $urlParts, 'parameters' => $parameters);
             
         }else{
