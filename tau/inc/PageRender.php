@@ -371,6 +371,7 @@ class PageRender {
         $user_logged = (TauSession::userLoggedIn())?'true':'false';
         
         $constants  = "const APP_BASE_URL = '" . APPLICATION_BASE_URL . "';\n";
+        $constants .= "const APP_COUNTRY = '" . TauSession::get('country') . "';\n";
         $constants .= "const LANG = '" . $this->lang . "';\n";
         $constants .= "const SPAN_ERROR_CLASS = '" . SPAN_ERROR_CLASS . "';\n";
         $constants .= "const FIELD_ERROR_CLASS = '" . FIELD_ERROR_CLASS . "';\n";

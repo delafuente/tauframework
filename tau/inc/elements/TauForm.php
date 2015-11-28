@@ -46,6 +46,7 @@ class TauForm {
     protected $formHash;
     protected $disableSubmit;
     protected $allowSubmitOnEnter;
+    protected $ajaxFunction;
     
     /**
      * Creates a new Form object
@@ -94,6 +95,7 @@ class TauForm {
         $this->elementValidation = array();
         $this->elementLabels = array();
         $this->modelData = false;
+        $this->ajaxFunction = false;
         $this->modelMapping = false;
         $this->formHash = sha1($this->id . $this->name);
         $this->setThemeMapping();
@@ -101,6 +103,10 @@ class TauForm {
     
     public function setSubmitButtonText($text){
         $this->submitValue = $text;
+    }
+    public function setAjaxFunction( $ajaxFunction ){
+        $this->ajaxFunction = $ajaxFunction;
+        $this->addInputHidden($this->id . '_ajaxFunction', LAYOUT, false, $this->ajaxFunction);
     }
     /**
      * Allows form to be submit if the user press enter in some non-textarea field.
