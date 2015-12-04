@@ -11,7 +11,7 @@
             var ajaxFunctionName = $('#'+form_id+'_ajaxFunction').val();
             
             if(tauValidation.formValidate(form_id,val_names,val_rules)){
-                if (ajaxFunctionName){
+                if (ajaxFunctionName !== ''){
                     tauValidation.executeFunctionByName(ajaxFunctionName, window);
                 }else{
                     $("#" + form_id).submit();

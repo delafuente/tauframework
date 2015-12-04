@@ -377,6 +377,9 @@ class PageRender {
         $constants .= "const FIELD_ERROR_CLASS = '" . FIELD_ERROR_CLASS . "';\n";
         $constants .= "const APP_LANG_URL = '" . APPLICATION_BASE_URL."/".$this->lang . "';\n";
         $constants .= "const USER_LOGGED_IN = " . $user_logged . ";\n";
+        $constants .= "const DECIMAL_SEPARATOR = '" . 
+                TauLocalization::getDecimalSeparator(TauSession::get('country'), 
+                $this->lang) . "';\n";
         $constants .= $this->jsConstants;
         
         return $constants;

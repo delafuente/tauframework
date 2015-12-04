@@ -11,7 +11,9 @@
  * @license https://github.com/delafuente/tauframework/blob/master/LICENSE The MIT License (MIT)
  */
 require_once( "inc/framework/TauURI.php" );
+require_once( "inc/framework/TauRequest.php" );
 require_once( "inc/framework/TauResponse.php" );
+require_once( "inc/framework/TauSession.php" );
 require_once( "inc/framework/TauMessages.php" );
 
 class Tau {
@@ -27,7 +29,7 @@ class Tau {
 
     protected function __construct(array $fake = null) {
 
-        if($fake){ $this->fake = $fake; }
+        if($fake !== null){ $this->fake = $fake; }
         
         $current_env = self::getEnv('APPLICATION_ENVIRONMENT');
         self::$loadedTemplates = array();
@@ -46,8 +48,8 @@ class Tau {
             $this->environment = $fake['environment']; 
         }
         
-        $this->determineCountry();
         $this->determineLang();
+        $this->determineCountry();
         
         TauResponse::setCookie('lang', $this->lang, time() + SECONDS_ONE_YEAR, "/");
         TauSession::put('lang', $this->lang);
@@ -61,7 +63,7 @@ class Tau {
         }
     }
     public function getCountry(){
-        return $this->country;
+        return mb_strtolower($this->country);
     }
     
     protected function determineLang(){
@@ -96,41 +98,39 @@ class Tau {
             return;
         }
         if($currentLoc = TauSession::get('localization')){
+            $this->country = $currentLoc['country'];
             TauResponse::setCookie('country', 
             mb_strtolower($currentLoc['country']), 
                     time() + SECONDS_ONE_YEAR, "/");
             return;
-        }
-        
+        }        
         if( $currentCountry = TauRequest::getCountryByIP() ){
-            $this->country = $currentCountry;
-            $this->addCountryToSession($this->country);
+            $this->country = mb_strtolower($currentCountry);
         }else{
             $accept = filter_input(
                     INPUT_SERVER,'HTTP_ACCEPT_LANGUAGE',FILTER_SANITIZE_STRING);
             $locale = Locale::acceptFromHttp($accept);
             if(strpos($locale, '_') !== false){
                 $splitted = explode('_', $locale);
-                $this->country = $splitted[1];
+                $this->country = mb_strtolower($splitted[1]);
             }else{
                 $this->country = DEFAULT_COUNTRY;
             }
-            $this->addCountryToSession($this->country);
         }
+        $this->addCountryToSession($this->country);
     }
     
     protected function addCountryToSession($country){
         global $lang_local;
-        $country = mb_strtolower($country);
         $db = DataManager::getInstance();
         $countryData = $db->getRow("select * from tau_localization ".
                 "where country='$country' limit 1");
         TauSession::put('localization', $countryData);
         TauSession::put('country', $country);
         TauSession::addToKey('localization', 
-                'date_format', $lang_local[$country]['date_format']);
+                'date_format', $lang_local[$this->getLang()]['date_format']);
         TauSession::addToKey('localization', 
-                'date_first_day', $lang_local[$country]['date_first_day']);
+                'date_first_day', $lang_local[$this->getLang()]['date_first_day']);
         TauResponse::setCookie('country', $country, time() + SECONDS_ONE_YEAR, "/");
     }
 
