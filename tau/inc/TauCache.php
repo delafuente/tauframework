@@ -22,10 +22,13 @@ class TauCache {
     
     public function __construct() {
         $this->messages = array();
-        $created = date("Y-m-d H:i:s", time());
-        $this->messages[] = "--- Cache Class Verbose ---";
-        $this->messages[]  = " -- cache executed: $created -- ";
-        file_put_contents(CACHE_PATH . "/output.html", "");
+        
+        if(USE_TAU_CACHE && VERBOSE_MODE){
+            $created = date("Y-m-d H:i:s", time());
+            $this->messages[] = "--- Cache Class Verbose ---";
+            $this->messages[]  = " -- cache executed: $created -- ";
+            file_put_contents(CACHE_PATH . "/output.html", "");
+        }
     }
     /**
      * Initialize the Cache object to deal with a file
@@ -138,5 +141,3 @@ class TauCache {
     
     
 }
-
-?>
