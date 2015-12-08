@@ -251,6 +251,37 @@ class DataManager {
     public function getAffectedRows(){
         return $this->db->rows_affected;
     }
+    public function getLastInsertId(){
+        return $this->db->insert_id;
+    }
+    public function prepareInsert($table, array $fields){
+        $query = "insert into $table (";
+        $valuesLine = ' values ( ';
+        $comma = '';
+        $lenFields = count($fields);
+        $c = 0;
+        foreach($fields as $key => $value){
+            $c++;
+            $value = $this->db->escape($value);
+            ($c == $lenFields)?$comma=' ':$comma=', ';
+            $query .= " `".$key."`".$comma;
+            $valuesLine .= " '$value'$comma ";
+        }
+        return $query.')'.$valuesLine.')';
+    }
+    public function prepareUpdate($table, array $fields, $id_field, $id_value){
+        $query = "update $table set ";
+        $comma = '';
+        $lenFields = count($fields);
+        $c = 0;
+        foreach($fields as $key => $value){
+            ($c == $lenFields)?$comma=' ':$comma=', ';
+            $value = $this->db->escape($value);
+            $query .= "`".$key."` = '".$value."'$comma ";
+        }
+        $query .= " where `$id_field` = '$id_value'";
+        return $query;
+    }
     /**
      * Internal function to grab the error if any, and return the result
      * of a query function.
