@@ -94,12 +94,18 @@ foreach($matches as $match){
    
     foreach($match as $coincidence){
         
-        if(isset($onlyOnce[$coincidence]) || strpos($coincidence, '-') !== false){
+        if(isset($onlyOnce[$coincidence]) ||
+                strpos($coincidence, '-') !== false){
             continue;
         }
-        
+        $tauFormedLabel = Tau::tau_tokenizer($fileRelative, $coincidence);
+        //Prevent modification of other templates texts, even when appearing
+        //in this template.
+        if(substr_count($tauFormedLabel, 'tau_') > 1){
+            continue;
+        }
         $formTable .= "<tr>";
-        $tokens[$coincidence] = Tau::tau_tokenizer($fileRelative, $coincidence);
+        $tokens[$coincidence] = $tauFormedLabel;
         $formTable .= "<td>" . $tokens[$coincidence] . "</td>";
         $text_id = 0;
         $onlyOnce[$coincidence] = 'yes';
@@ -128,5 +134,3 @@ $template = str_replace("{{replace_footer}}", "Powered by " . Tau::getTauFramewo
 $template = str_replace("{{replace_content}}", $myMatches, $template);
 
 echo $template;
-
-?>

@@ -24,7 +24,7 @@ class TauMessages {
      * @param string $type notice, warning or error
      * @param string $sender The file or method calling this 
      */
-    public static function addMessage($message, $type = "notice", $sender = "") {
+    public static function addMessage($message, $type = "notice", $sender = "anonymous") {
         if (!VERBOSE_MODE) {
             return false;
         }
@@ -46,13 +46,13 @@ class TauMessages {
         self::$messages[] = " $type [".date("Y-m-d H:i:s",time())."][$sender] $message";
     }
     
-    public static function addNotice($message, $sender){
+    public static function addNotice($message, $sender = 'anonymous'){
         self::addMessage($message, 'notice', $sender);
     }
-    public static function addWarning($message, $sender){
+    public static function addWarning($message, $sender = 'anonymous'){
         self::addMessage($message, 'warning', $sender);
     }
-    public static function addError($message, $sender){
+    public static function addError($message, $sender = 'anonymous'){
         self::addMessage($message, 'error', $sender);
     }
     

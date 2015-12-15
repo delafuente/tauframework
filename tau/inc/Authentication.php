@@ -60,6 +60,12 @@ class Authentication {
             foreach($user_data as $key => $val){
                 $userData[$key] = $val;
             }
+            if($loginExternal){
+                $queryData = ['image' => $outerData['p_image']];
+                $queryUpImg = $dm->prepareUpdate('tau_user', $queryData, 
+                        'ui_id_user', $data['ui_id_user']);
+                $dm->makeQuery($queryUpImg);
+            }
             TauSession::put('user', $userData);
             
             return true;
