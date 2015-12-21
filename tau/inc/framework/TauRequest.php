@@ -24,6 +24,9 @@ class TauRequest {
     }
     
     public static function getUriPart($position){
+        if(!isset(self::$uri[$position])){
+            return false;
+        }
         return self::$uri[$position];
     }
 

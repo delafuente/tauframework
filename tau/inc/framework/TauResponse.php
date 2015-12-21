@@ -15,7 +15,8 @@ class TauResponse {
     
     protected static $headers = array();
     protected static $cookies = array();
-    
+    const RESPONSE_JSON = true;
+    const RESPONSE_PLAIN = false;
 
     public static function addHeader($header) {
         self::$headers[] = $header;
@@ -84,6 +85,44 @@ class TauResponse {
             TauMessages::addError("Error trying to save Cookie: " . print_r(self::$cookies[count(self::$cookies) -1],true), "TauResponse::setCookie()");
         }
         
+    }
+    /**
+     * Executes a final response in ajax format
+     * @param string $html Html embedded in the JSON as responseStatus
+     * @param string $status  status code, in responseStatus
+     * @param mixed $elements free slot to pass arrays or text or anything
+     * @param int $mode JSON constants like JSON_FORCE_OBJECT, JSON_PRETTY_PRINT
+     */
+    public static function ajaxResponse($html, $status = 'OK', $elements = null, $mode = JSON_FORCE_OBJECT) {
+        self::addHeader('Content-Type: application/json; charset=utf-8');
+        $response = array(
+            'responseStatus' => $status,
+            'responseHtml' => $html,
+            'elements' => $elements
+        );
+        self::sendHeadersAndCookies();
+        echo json_encode($response, $mode);
+        Tau::getInstance()->hookAfterRender();
+        die();
+    }
+    /**
+     * Executes a final response in ajax format
+     * @param string $content The content to output
+     * @param boolean $responseJson Will enconde in JSON unless false
+     * @param type $mode JSON constants like JSON_FORCE_OBJECT, JSON_PRETTY_PRINT
+     */
+    public static function ajaxResponsePlain($content, $responseJson = false, $mode = JSON_FORCE_OBJECT){
+        self::addHeader('Content-Type: application/json; charset=utf-8');
+        
+        self::sendHeadersAndCookies();
+        if($responseJson){
+            echo json_encode($content, $mode);
+        }else{
+            echo $content;
+        }
+        
+        Tau::getInstance()->hookAfterRender();
+        die();
     }
 
 }

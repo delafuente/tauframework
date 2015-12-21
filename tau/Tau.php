@@ -25,7 +25,7 @@ class Tau {
     private static $allDbInstances;
     private static $uniqueInstance = null;
     private static $loadedTemplates;
-    
+    public static $localDateFormat = null;
 
     protected function __construct(array $fake = null) {
 
@@ -102,6 +102,7 @@ class Tau {
             TauResponse::setCookie('country', 
             mb_strtolower($currentLoc['country']), 
                     time() + SECONDS_ONE_YEAR, "/");
+            $this->addCountryToSession($this->country);
             return;
         }        
         if( $currentCountry = TauRequest::getCountryByIP() ){
@@ -119,7 +120,13 @@ class Tau {
         }
         $this->addCountryToSession($this->country);
     }
-    
+    public static function getUrlImage($imagePath){
+        if(strpos($imagePath, 'http') === false){
+            return USER_IMAGES_URL ."/$imagePath";
+        }else{
+            return $imagePath;
+        }
+    }
     protected function addCountryToSession($country){
         global $lang_local;
         $db = DataManager::getInstance();
@@ -129,11 +136,19 @@ class Tau {
         TauSession::put('country', $country);
         TauSession::addToKey('localization', 
                 'date_format', $lang_local[$this->getLang()]['date_format']);
+        $this->setDateFormat($lang_local[$this->getLang()]['date_format']);
+        
         TauSession::addToKey('localization', 
                 'date_first_day', $lang_local[$this->getLang()]['date_first_day']);
         TauResponse::setCookie('country', $country, time() + SECONDS_ONE_YEAR, "/");
     }
 
+    protected function setDateFormat($dateFormat){
+        $replace = ['dd','mm','yy'];
+        $replaceWith = ['d','m','Y'];
+        self::$localDateFormat = str_replace($replace,$replaceWith, $dateFormat);
+    }
+    
     private final function __clone() {
         
     }
