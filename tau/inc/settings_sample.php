@@ -103,6 +103,7 @@ if(DEBUG_MODE){
 }else{
     ini_set('display_errors', false);
 }
+define('USER_IMAGES_URL', APPLICATION_BASE_URL.'/uploads');
 //Data that (normally) remains unchanged in every environment
 $autoloadPaths = array(
     APPLICATION_PATH . "/tau/inc",

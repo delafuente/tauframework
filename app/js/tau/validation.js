@@ -4,6 +4,12 @@
     var tauValidation= (function($, undefined){
         
         
+        var validateOnly = function(form_id){
+            var val_names = $('#rr_names_' + form_id).html();
+            var val_rules = $('#rr_rules_' + form_id).html();
+            return tauValidation.formValidate(form_id,val_names,val_rules);
+        }
+        
         var testToSend = function(form_id){
             var val_names = $('#rr_names_' + form_id).html();
             var val_rules = $('#rr_rules_' + form_id).html();
@@ -11,7 +17,7 @@
             var ajaxFunctionName = $('#'+form_id+'_ajaxFunction').val();
             
             if(tauValidation.formValidate(form_id,val_names,val_rules)){
-                if (ajaxFunctionName !== ''){
+                if (ajaxFunctionName !== undefined && ajaxFunctionName !== ''){
                     tauValidation.executeFunctionByName(ajaxFunctionName, window);
                 }else{
                     $("#" + form_id).submit();
@@ -359,7 +365,8 @@
             outlineRed : outlineRed,
             outlineNone : outlineNone,
             formatValidationMessage : formatValidationMessage,
-            executeFunctionByName : executeFunctionByName
+            executeFunctionByName : executeFunctionByName,
+            validateOnly : validateOnly
         
         }
     })(jQuery);

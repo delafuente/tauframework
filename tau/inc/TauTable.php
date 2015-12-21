@@ -55,10 +55,10 @@ class TauTable {
    //looknew
    /**
     * Creates an instance of TauTable, with optional table id and class/classes
-    * @param <string> $table_id html id of table, can be empty
-    * @param <string> $table_class css class or classes separated by space
-    * @param <int> $columns number of columns
-    * @param <int> $rows number of rows
+    * @param string $table_id html id of table, can be empty
+    * @param string $table_class css class or classes separated by space
+    * @param int $columns number of columns
+    * @param int $rows number of rows
     */
    function  __construct($table_id=false,$table_class=false,$columns=false,
            $rows=false) {
@@ -93,10 +93,10 @@ class TauTable {
      * Add array of rows, being each row an array of data.
      * See addRow().
      *
-     * @param <array> $structArray Array of rows ( each one is an array with data for cells )
-     * @param <array> $rowIdsArray Array of html id values for each row.
-     * @param <string> $where 'tbody','thead' or 'tfoot'.
-     * @param <string> $rowClass  Css class value(s) for the row, space splitted.
+     * @param array $structArray Array of rows ( each one is an array with data for cells )
+     * @param array $rowIdsArray Array of html id values for each row.
+     * @param string $where 'tbody','thead' or 'tfoot'.
+     * @param string $rowClass  Css class value(s) for the row, space splitted.
      */
     public function addRows($structArray,$rowIdsArray=false,
             $where='tbody',$rowClass=false){
@@ -137,12 +137,12 @@ class TauTable {
      * different, will return false. If return false, use getErrorMessages to
      * see what happened. If countRows=false, this comparison is avoided //looknew
      *
-     * @param <array> $dataArray Array with the data for cells.
-     * @param <mixed> $rowId String or int html id attr for row
-     * @param <string> $where thead,tbody,tfoot are the accepted values
-     * @param <string> $rowClass css class or classes for row, space separated.
-     * @param <boolean> $countRows If true, count($dataArray) will be tested. //looknew
-     * @return <boolean> True on success, false otherwise.
+     * @param array $dataArray Array with the data for cells.
+     * @param mixed $rowId String or int html id attr for row
+     * @param string $where thead,tbody,tfoot are the accepted values
+     * @param string $rowClass css class or classes for row, space separated.
+     * @param boolean $countRows If true, count($dataArray) will be tested. //looknew
+     * @return boolean True on success, false otherwise.
      */
     public function addRow($dataArray,$rowId=false,$where="tbody",
             $rowClass=false,$countRows=true){ //looknew
@@ -207,11 +207,11 @@ class TauTable {
      * Not yet fulfilled, do not use
      * //TODO: write this function and make the functionallity ?
      *
-     * @param <mixed> $rowId html attr id of row, or numeric index (begin on 0),
+     * @param mixed $rowId html attr id of row, or numeric index (begin on 0),
      * counting from each block, thead,tbody or tfoot.
-     * @param <int> $cellNumber column index of cell, begin on zero.
-     * @param <int> $numColumns number of colspan columns
-     * @param <string> $where 'thead','tbody' or 'tfoot'. Default 'tbody'
+     * @param int $cellNumber column index of cell, begin on zero.
+     * @param int $numColumns number of colspan columns
+     * @param string $where 'thead','tbody' or 'tfoot'. Default 'tbody'
      */
    public function setCellColspan($rowId,$cellNumber,$numColumns,
            $where="tbody"){
@@ -225,11 +225,11 @@ class TauTable {
     * set to '0'. Some browsers treat this different, and only strict html
     * doctypes support this feature.
     *
-    * @param <string> $innerHtml
-    * @param <string> $rowId
-    * @param <string> $where
-    * @param <string> $rowClass
-    * @return <type>
+    * @param string $innerHtml
+    * @param string $rowId
+    * @param string $where
+    * @param string $rowClass
+    * @return type
     */
    public function addFullSpanRow($innerHtml,$rowId,$where="tfoot",
             $rowClass=false){
@@ -268,7 +268,7 @@ class TauTable {
    /**
     * If specified, all odd rows will have this class in addition of any other
     * specified.
-    * @param <string> $oddClass class for all odd rows
+    * @param string $oddClass class for all odd rows
     */
    public function setOddClass($oddClass){
        $this->oddClass=$oddClass;
@@ -296,14 +296,14 @@ class TauTable {
    /**
     * Makes a full table with a mysql result.
     * 
-    * @param <mysql_resource> $result A mysql_query result.
-    * @param <array> $headersArray Array with column titles, if false will take real field names.
-    * @param <string> $caption  The table caption
-    * @param <array> $tfootText Text for footer, colspan all columns. Use an array. (array[0])
-    * @param <string> $thRowId html id of header row
-    * @param <string> $thRowClass css class of header row
-    * @param <string> $tbodyRowsClass css class of all tbody rows
-    * @param <array>  $tbodyRowsIdsArray Array of all tbody rows html id's
+    * @param mysql_res $result A mysql_query result.
+    * @param array $headersArray Array with column titles, if false will take real field names.
+    * @param string $caption  The table caption
+    * @param array $tfootText Text for footer, colspan all columns. Use an array. (array[0])
+    * @param string $thRowId html id of header row
+    * @param string $thRowClass css class of header row
+    * @param string $tbodyRowsClass css class of all tbody rows
+    * @param array  $tbodyRowsIdsArray Array of all tbody rows html id's
     */ 
    public function makeTableFromResult(&$result,$headersArray=false,
     $caption=false,$tfootText=false,$thRowId=false,
@@ -345,7 +345,7 @@ class TauTable {
    }
    /**
     *
-    * @return <string> html paragraphs of any errors ocurred, separated by \n.
+    * @return string html paragraphs of any errors ocurred, separated by \n.
     */
    public function getErrorMessages(){
        return $this->errorMessages;
@@ -387,7 +387,7 @@ class TauTable {
             $headRows++;
             $colspanAttr=""; //looknew
 
-            if($this->fullColspan['thead'][$key]){
+            if(isset($this->fullColspan['thead'][$key])){
                 if($this->fullColspan['thead'][$key]=="all"){
                    $this->fullColspan['thead'][$key]="0";
                 }
@@ -482,7 +482,7 @@ class TauTable {
             $bodyRows++;
             $colspanAttr=""; //looknew
 
-            if($this->fullColspan['tbody'][$key]  ){
+            if(isset($this->fullColspan['tbody'][$key])){
                 if($this->fullColspan['tbody'][$key]=="all"){
                    $this->fullColspan['tbody'][$key]="0";
                 }
@@ -525,8 +525,8 @@ class TauTable {
    /**
     * Returns an attribute='value' text, i.e.: makeAttr("id","myTable")
     * will output this text: id='myTable', surrounded with spaces.
-    * @param <string> $attrName name of the attribute
-    * @param <string> $attrValue value of the attribute
+    * @param string $attrName name of the attribute
+    * @param string $attrValue value of the attribute
     */
    private function makeAttr($attrName,$attrValue){
        return " $attrName=" . "'$attrValue' "; 
@@ -535,7 +535,7 @@ class TauTable {
    /**
     * Add error string to errorMessages member, between html paragraphs, and
     * splitted with \n.
-    * @param <string> $errorDescription Error description
+    * @param string $errorDescription Error description
     */
    private function addErrorMessage($errorDescription){
        $this->errorMessages .= "<p>" . $errorDescription . "</p>\n";
@@ -550,5 +550,3 @@ class TauTable {
 
 
 }
-?>
-
