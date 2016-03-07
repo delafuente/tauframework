@@ -205,7 +205,7 @@ class Tau {
     }
 
     public function hookAfterRender() {
-        Tau::closeAllDbConnections();
+        
     }
 
     public function hookBeforeInit() {

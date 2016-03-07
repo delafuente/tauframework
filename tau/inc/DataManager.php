@@ -22,7 +22,7 @@ class DataManager {
     protected $db_user;
     protected $lastErrorMessage;
     protected $lastErrorTrace;
-    protected static $queryLog = array();
+    protected $queryLog = array();
     private static $uniqueInstance = null;
     protected static $otherInstances = array();
     
@@ -89,37 +89,37 @@ class DataManager {
     }
     
     public function getRow($query, $returnAs=ARRAY_A){
-        self::addToQueryLog($query);
+        $this->addToQueryLog($query);
         $res = $this->db->get_row($query,$returnAs);
         return $this->getQueryResult($res);
     }
 
     public function getResults($query, $returnAs=ARRAY_A){
-        self::addToQueryLog($query);
+        $this->addToQueryLog($query);
         $res = $this->db->get_results($query,$returnAs);
         return $this->getQueryResult($res);
     }
     
     public function getVar($query, $returnAs=ARRAY_A){
-        self::addToQueryLog($query);
+        $this->addToQueryLog($query);
         $res = $this->db->get_var($query);
         return $this->getQueryResult($res);
     }
 
     public function makeQuery($query){
-        self::addToQueryLog($query);
+        $this->addToQueryLog($query);
         $res = $this->db->query($query);
         return $this->getQueryResult($res, $query);
     }
     /**
-     * Get array of type arr[key_field] = value_field
+     * Get array of type arr[key_field] = value_field, or simple array if key_field=false
      * @param string $query The query, must require at least key_field and value_field fields
      * @param string $key_field The field that is going to be used as key of the array
      * @param string $value_field The field that is going to be used as value of the array
      * @return mixed Assoc array with results, of false if no results
      */
     public function getList($query, $key_field, $value_field){
-        self::addToQueryLog($query);
+        $this->addToQueryLog($query);
         $res = $this->db->get_results($query,ARRAY_A);
         $list = array();
         $elems = count($res);
@@ -127,7 +127,12 @@ class DataManager {
         if($res !== false){
             
             for($i=0;$i < $elems; $i++){
-                $list[$res[$i][$key_field]] = $res[$i][$value_field];
+                if($key_field === false){
+                    $list[$i] = $res[$i][$value_field];
+                }else{
+                    $list[$res[$i][$key_field]] = $res[$i][$value_field];
+                }
+                
             }
             return $list;
         }else{
@@ -142,7 +147,7 @@ class DataManager {
      * @return mixed Assoc array with results, of false if no results
      */
     public function getListAndFull($query, $key_field, $value_field){
-        self::addToQueryLog($query);
+        $this->addToQueryLog($query);
         $res = $this->db->get_results($query,ARRAY_A);
         $list = array();
         $elems = count($res);
@@ -162,7 +167,7 @@ class DataManager {
      * Starts a transaction
      */
     public function beginTransaction(){
-        self::addToQueryLog('START TRANSACTION;');
+        $this->addToQueryLog('START TRANSACTION;');
         $this->db->query('START TRANSACTION;');
     }
     /**
@@ -171,7 +176,7 @@ class DataManager {
      * use rollback() otherwise
      */
     public function commit(){
-        self::addToQueryLog('COMMIT;');
+        $this->addToQueryLog('COMMIT;');
         $this->db->query('COMMIT');
     }
     /**
@@ -179,7 +184,7 @@ class DataManager {
      * Will roll back any changes to the db in current transaction.
      */
     public function rollback(){
-        self::addToQueryLog('ROLLBACK;');
+        $this->addToQueryLog('ROLLBACK;');
         $this->db->query('ROLLBACK');
     }
     /**
@@ -211,7 +216,7 @@ class DataManager {
      * @param string $query The query to execute
      */
     protected function doTransactionQuery($query){
-        self::addToQueryLog($query);
+        $this->addToQueryLog($query);
         $res = $this->db->query($query);
 
         return $res;
@@ -221,7 +226,7 @@ class DataManager {
      * @return array List of all queries executed, if DEBUG_MODE = true
      */
     public function getExecutedQueries(){
-        return self::$queryLog;
+        return $this->queryLog;
     }
     public function escape($vars){
         if(is_array($vars)){
@@ -245,7 +250,20 @@ class DataManager {
     public function getLastErrorTrace(){
         return $this->lastErrorTrace;
     }
+    protected function saveAllQueriesToLog(){
+        if(DB_LOG_ALL_QUERIES){
+            $queriesBuffer = '-- @@ save queries of db_name: '.
+                    $this->db_name.'@'.$this->db_host.PHP_EOL;
+            
+            foreach($this->getExecutedQueries() as $query){
+                $queriesBuffer .= $query . PHP_EOL;
+            }
+            Log::put( ALL_QUERIES_LOGFILE, $queriesBuffer, FILE_APPEND);    
+        }
+    }
     public function close(){
+        
+        $this->saveAllQueriesToLog();
         $this->db->disconnect();
     }
     public function getAffectedRows(){
@@ -275,6 +293,7 @@ class DataManager {
         $lenFields = count($fields);
         $c = 0;
         foreach($fields as $key => $value){
+            $c++;
             ($c == $lenFields)?$comma=' ':$comma=', ';
             $value = $this->db->escape($value);
             $query .= "`".$key."` = '".$value."'$comma ";
@@ -289,26 +308,27 @@ class DataManager {
      * @return mixed false if fails, result of query otherwise
      */
     protected function getQueryResult($res){
-        if($res === false){
+        if($res === NULL){
+           return false; 
+        }else if($res === false){
             if($this->db->rows_affected === -1){
                 $this->lastErrorMessage = "Sentence don't modified rows";
                 return false;
             }else{
                 return true;
             }
-            return false;
         }else{
             return $res;
         }
     }
     
-    protected static function addToQueryLog($query){
+    protected function addToQueryLog($query){
         if(DEBUG_MODE){ 
             $r = mt_rand(0,9999);
             $q = mt_rand(0,9999);
             $rnd = $r . $q;
             $z = str_pad($rnd, 8, '0', STR_PAD_LEFT);
-            self::$queryLog[date("Y-m-d H:i:s",time())."_$z".uniqid()] = $query; 
+            $this->queryLog[sha1($query).'_'.date("Y-m-d H:i:s",time())."_$z"] = $query; 
         }
     }
 }

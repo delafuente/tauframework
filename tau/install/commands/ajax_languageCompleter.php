@@ -218,10 +218,15 @@ if ($replace_in_local) {
         foreach ($matches as $match) {
 
             foreach ($match as $coincidence) {
-                if(strpos($coincidence, '-') !== false){
+                
+                $replaceWith = "{{" . Tau::tau_tokenizer($full_filename, $coincidence) . "}}";
+                
+                if(strpos($coincidence, '-') !== false 
+                        || substr_count($replaceWith, 'tau_') > 1){
                     continue;
                 }
-                $file_contents = str_replace($coincidence, "{{" . Tau::tau_tokenizer($full_filename, $coincidence) . "}}", $file_contents);
+
+                $file_contents = str_replace($coincidence, $replaceWith, $file_contents);
             }
         }
 

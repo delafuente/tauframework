@@ -51,7 +51,7 @@ $textMigratesToExecute = "";
 foreach($listOfMigrates as $migrateCandidate){
     if($migrateCandidate == "." 
             || $migrateCandidate == ".." 
-            || is_dir( $migrateCandidate ) 
+            || is_dir( MIGRATES_FOLDER.'/'.$migrateCandidate ) 
             || strpos($migrateCandidate, "_rollback") !== false
             || !$currentMigrates){
         continue;
@@ -253,5 +253,3 @@ function removeMysqlComments($text){
     }
     return $resultLines;
 }
-
-?>

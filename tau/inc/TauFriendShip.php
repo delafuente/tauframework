@@ -61,12 +61,17 @@ public function testFriendshipRequest($n,$z,$requester){
 
     try{
         
-     $rel_search = ($requester==$a)?"a_to_b":"b_to_a";
+     //$rel_search = ($requester==$a)?"a_to_b":"b_to_a";
      $query = "select id_rel,relation from tau_friendship where id_a=$a and id_b=$b limit 1;";
      $resultArray = $this->db->getRow($query);
-     $relation = $resultArray['relation'];
-     $id_rel = $resultArray['id_rel'];
-
+     if(!$resultArray){
+         $relation = 'none';
+         $id_rel = 0;
+     }else{
+         $relation = $resultArray['relation'];
+         $id_rel = $resultArray['id_rel'];
+     }
+     
 
    if($relation == "a_to_b" && $requester == $a){
        return "yet_solicited";
@@ -99,7 +104,6 @@ public function testFriendshipRequest($n,$z,$requester){
        if(DEBUG_MODE){
             error_log($unknownException->getTraceAsString());
        }
-
    }
 
 }
@@ -109,7 +113,7 @@ public function testFriendshipRequest($n,$z,$requester){
  * @param int $z one of the users id
  * @return bool True if can delete, false otherwise 
  */
-protected function deletePreviousRelation($n,$z){
+public function deletePreviousRelation($n,$z){
     if($n < $z){ $a = $n; $b = $z;}else{$a = $z;$b = $n;}
      $can_make_action = ($a==$this->logged_user_id || $b == $this->logged_user_id);
      if($can_make_action){
@@ -191,6 +195,7 @@ protected function deletePreviousRelation($n,$z){
    */
 
   public function registerFriendshipRequest($a_id,$b_id,$requesterId){
+    //if($a_id > $b_id){ $a_id ^= $b_id ^= $a_id ^= $b_id; } //if a > b, swap them
     $relationString = ($requesterId==$a_id)?"a_to_b":"b_to_a";
     //Control this user can modify this relation:
      $can_make_action = ($a_id==$this->logged_user_id || $b_id == $this->logged_user_id);
@@ -218,6 +223,7 @@ protected function deletePreviousRelation($n,$z){
    */
   public function areFriends($n,$z){
     if($n < $z){ $a = $n; $b = $z;}else{$a = $z;$b = $n;}
+    if($a === $b){ return false; }
     $query = "select id_rel from tau_friendship where id_a=$a and id_b=$b and " .
     " relation='friends' limit 1";
     $id_of_relation = $this->db->getRow($query);
@@ -229,33 +235,46 @@ protected function deletePreviousRelation($n,$z){
     }
 
   }
-  /**
-   * Get all the friends of a user
-   * @param int $a The id of the user to get the friends of
-   * @param int $limit Limit the max results to this integer
-   * @return array Associative array with key => username value => id of all the friends of $a. ( False if no friends )
-   */
-  public function getFriends($user_id, $limit = false){
-     $baseList ="";
-      $sqlLimit ='';
-     if($limit !== false){
-         $sqlLimit = " limit $limit";
-     }
-     $query = "select id_a,id_b from tau_friendship where (id_a=$user_id or id_b=$user_id) and relation='friends' $sqlLimit";
-     $endList = array();
-
+  
+  public function getFriendsIds($userId){
+      
+      $first = $this->getFriendsPartial($userId, 'id_a');
+      $second = $this->getFriendsPartial($userId, 'id_b');
+      return array_merge($first, $second);
+  }
+  
+  protected function getFriendsPartial($userId, $compare){
+     
+     $results = array(); 
+     
+     $query = "select id_a,id_b from tau_friendship where $compare='$userId' and relation='friends'";
+     
      $res = $this->db->getResults($query);
      if(!$res){
-         return false;
+         return $results;
      }
      foreach($res as $row){
-         if($row['id_a']==$user_id){
-             $baseList .= $row['id_b'] . ",";
+         if($row['id_a'] == $userId){      
+             $results[] = $row['id_b'];
          }else{
-             $baseList .= $row['id_a'] . ",";
+             $results[] = $row['id_a'];
          }
+     }  
+     return $results;
+  }
+  /**
+   * Get all the friends of a user
+   * @param int $user_id The id of the user to get the friends from
+   * @return array Associative array with key => username value => id of all the friends of $a. ( False if no friends )
+   */
+  public function getFriends($user_id){
+      
+     $endList = array();
+     $friends = $this->getFriendsIds($user_id);
+     if(!$friends){
+         return $endList;
      }
-     $baseList = trim($baseList,",");
+     $baseList = implode(',', $friends);
 
      $query = "select * from tau_user where bo_active=1 and " .
      " ui_id_user in(" . $baseList . ");";
@@ -281,7 +300,13 @@ protected function deletePreviousRelation($n,$z){
 
      return $endList;
   }
-
+  public static function countFriendshipRequests($userId){
+      $db = DataManager::getInstance();
+      $query = "select count(*) from (select * from tau_friendship  where ".
+              " id_a=$userId and relation='b_to_a' union select * from ".
+              " tau_friendship where id_b=$userId and relation='a_to_b') T";
+      return $db->getVar($query);
+  }
    /**
    * Get all the friendship requests of a user
    * @param int $a The id of the user to get the friends of
@@ -294,9 +319,14 @@ protected function deletePreviousRelation($n,$z){
      if($limit !== false){
          $sqlLimit = " limit $limit";
      }
-     $query = "select id_a,id_b from tau_friendship where (id_a=$user_id and relation='b_to_a') or (id_b=$user_id and relation='a_to_b') $sqlLimit";
+     $query = "(select id_a,id_b,dt_created from tau_friendship where ".
+             " id_a=$user_id and relation='b_to_a') ".
+             " union (select id_a,id_b,dt_created from tau_friendship where ".
+             " id_b=$user_id and relation='a_to_b') $sqlLimit";
+     
      $endList = array();
-
+     $dates = array();
+     
      $res = $this->db->getResults($query);
      if(!$res){
          return false;
@@ -304,8 +334,10 @@ protected function deletePreviousRelation($n,$z){
      foreach($res as $row){
          if($row['id_a']==$user_id){
              $baseList .= $row['id_b'] . ',';
+             $dates[$row['id_b']] = $row['dt_created'];
          }else{
              $baseList .= $row['id_a'] . ',';
+             $dates[$row['id_a']] = $row['dt_created'];
          }
      }
      $baseList = trim($baseList,',');
@@ -318,7 +350,8 @@ protected function deletePreviousRelation($n,$z){
      $result = $this->db->getResults($query);
      if($result){
         foreach($result as $row){
-         $endList['user'][$row['ui_id_user']] = $row;
+            $row['date'] = $dates[$row['ui_id_user']];
+            $endList['user'][$row['ui_id_user']] = $row;
         }
      }else{
          return false;

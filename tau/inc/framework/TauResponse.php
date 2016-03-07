@@ -103,6 +103,14 @@ class TauResponse {
         self::sendHeadersAndCookies();
         echo json_encode($response, $mode);
         Tau::getInstance()->hookAfterRender();
+        Tau::closeAllDbConnections();
+        die();
+    }
+    public static function endApplication($output){
+        self::sendHeadersAndCookies();
+        Tau::getInstance()->hookAfterRender();
+        Tau::closeAllDbConnections();
+        echo $output;
         die();
     }
     /**
