@@ -23,6 +23,7 @@ define('WITHOUT_DATA_MANAGER',false);
 define('APPLICATION_NAME', 'myapp.com'); //main domain
 define('CANONICAL_APP_NAME','www.myapp.com');
 define('APPLICATION_INSTALLED',false);
+define('SITE_NAME', 'MyApp');
 
 if (PRODUCTION_ENVIRONMENT) {
 
@@ -45,6 +46,7 @@ if (PRODUCTION_ENVIRONMENT) {
     define('LU_COOKIE_DOMAIN', 'myapp.com');
     define('MIGRATES_FOLDER', WEB_PATH . "/migrates");
     define('USE_TAU_CACHE', true);
+    define('DB_LOG_ALL_QUERIES', false); //DB write all queries to log, use with caution, as it writes a lot
     
 } else if (DEVELOPMENT_ENVIRONMENT) {
 
@@ -67,6 +69,7 @@ if (PRODUCTION_ENVIRONMENT) {
     define('LU_COOKIE_DOMAIN', 'myapp.com');
     define('MIGRATES_FOLDER', WEB_PATH . "/migrates");
     define('USE_TAU_CACHE', true);
+    define('DB_LOG_ALL_QUERIES', false); //DB write all queries to log, use with caution, as it writes a lot
     
 } else if (LOCAL_WITH_LOCALHOST) {
 
@@ -92,7 +95,8 @@ if (PRODUCTION_ENVIRONMENT) {
     define('LU_COOKIE_PATH', "/");
     define('LU_COOKIE_DOMAIN', false);
     define('MIGRATES_FOLDER', WEB_PATH . "/migrates");
-    define('USE_TAU_CACHE', false);
+    define('USE_TAU_CACHE', true);
+    define('DB_LOG_ALL_QUERIES', false); //DB write all queries to log, use with caution, as it writes a lot
 
 } else {
     die("<p>settings error: CONSTANTS ERROR IN config.php, PRODUCTION" .
@@ -104,6 +108,7 @@ if(DEBUG_MODE){
     ini_set('display_errors', false);
 }
 define('USER_IMAGES_URL', APPLICATION_BASE_URL.'/uploads');
+define('ALL_QUERIES_LOGFILE', 'allqueries');
 //Data that (normally) remains unchanged in every environment
 $autoloadPaths = array(
     APPLICATION_PATH . "/tau/inc",
@@ -116,6 +121,7 @@ $autoloadPaths = array(
     APPLICATION_PATH . "/app/controllers/widgets",
     APPLICATION_PATH . "/app/controllers/widgets/web"
 );
+define('NO_CACHE', false);
 /** Field span error class */
 define('SPAN_ERROR_CLASS', 'spanError');
 /** Field error class */

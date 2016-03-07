@@ -82,7 +82,10 @@ class PageRender {
         
         try {
             $text = file_get_contents($filename);
-            $replacer->addLanguageFile($this->getTranslationGroup($filename), APPLICATION_BASE_URL, $this->lang);
+            $text = $this->wrapWithTemplateInfo($filename, $text);
+            $replacer->addLanguageFile($this->getTranslationGroup($filename), 
+                    APPLICATION_BASE_URL, $this->lang);
+            
             $slotId = $this->addContent($text, $replacer, $id);
             if ($text = "") {
                 throw new Exception("Cannot open filename " . $filename);
@@ -101,7 +104,16 @@ class PageRender {
             }
         }
     }
-
+    protected function wrapWithTemplateInfo($filename, $text){
+        if(DEBUG_MODE){
+            $n = PHP_EOL;
+            $header = $n.$n."<!-- LOAD TEMPLATE $filename -->".$n.$n;
+            $footer = $n.$n."<!-- END LOAD TEMPLATE $filename -->".$n.$n;
+            return $header.$text.$footer;
+        }else{
+            return $text;
+        }
+    }
     /**
      * Get the contents of file without adding it to this object, for
      * parsing or formatting. Intended to use it later with addContent()
@@ -125,6 +137,8 @@ class PageRender {
         
         try {
             $text = file_get_contents($filename);
+            $text = $this->wrapWithTemplateInfo($filename, $text);
+            
             if ($text == "") {
                 throw new Exception("Cannot open filename " . $filename);
             }
@@ -181,6 +195,8 @@ class PageRender {
         $contents = ob_get_contents();
         ob_end_clean();
         
+        $contents = $this->wrapWithTemplateInfo($filename, $contents);
+        
         if ($replacer != null) {
             $replacer->addLanguageFile($this->getTranslationGroup($filename), APPLICATION_BASE_URL, $this->lang);
             $returnText =  $replacer->filter($contents);
@@ -223,6 +239,7 @@ class PageRender {
         $contents = ob_get_contents();
         ob_end_clean();
         
+        $contents = $this->wrapWithTemplateInfo($filename, $contents);
         $replacer->addLanguageFile($this->getTranslationGroup($filename), APPLICATION_BASE_URL, $this->lang);
         $slotId = $this->addContent($contents, $replacer);
         
@@ -338,7 +355,7 @@ class PageRender {
         }
         
         //Constants
-        $constants = $this->getConstantsForJavascript();
+        $constants = $this->getConstantsForJavascript();       
         $endPage = str_replace("</head>","\n\n<script language='javascript'>\n\n" . 
                 $validation_text . "\n" .$constants. "\n\n</script>\n\n".
                 "$feedback_css \n\n</head>\n" ,$endPage);
@@ -369,17 +386,30 @@ class PageRender {
     protected function getConstantsForJavascript(){
         
         $user_logged = (TauSession::userLoggedIn())?'true':'false';
+        $lang_url = APP_URL.'/'.$this->lang;
         
-        $constants  = "const APP_BASE_URL = '" . APPLICATION_BASE_URL . "';\n";
-        $constants .= "const APP_COUNTRY = '" . TauSession::get('country') . "';\n";
-        $constants .= "const LANG = '" . $this->lang . "';\n";
-        $constants .= "const SPAN_ERROR_CLASS = '" . SPAN_ERROR_CLASS . "';\n";
-        $constants .= "const FIELD_ERROR_CLASS = '" . FIELD_ERROR_CLASS . "';\n";
-        $constants .= "const APP_LANG_URL = '" . APPLICATION_BASE_URL."/".$this->lang . "';\n";
-        $constants .= "const USER_LOGGED_IN = " . $user_logged . ";\n";
-        $constants .= "const DECIMAL_SEPARATOR = '" . 
+        $constants  = "var APP_BASE_URL = '" . APPLICATION_BASE_URL . "';\n";
+        $constants .= "var APP_COUNTRY = '" . TauSession::get('country') . "';\n";
+        $constants .= "var LANG = '" . $this->lang . "';\n";
+        $constants .= "var SPAN_ERROR_CLASS = '" . SPAN_ERROR_CLASS . "';\n";
+        $constants .= "var FIELD_ERROR_CLASS = '" . FIELD_ERROR_CLASS . "';\n";
+        $constants .= "var APP_LANG_URL = '" . $lang_url . "';\n";
+        $constants .= "var USER_LOGGED_IN = " . $user_logged . ";\n";
+        $constants .= "var DECIMAL_SEPARATOR = '" . 
                 TauLocalization::getDecimalSeparator(TauSession::get('country'), 
                 $this->lang) . "';\n";
+        $allUrls = LanguageLoader::getInstance()->getAllUrls();
+        $totUrls = count($allUrls);
+        $counter = 0;
+        $constants .= "var langUrl = {\n";
+        
+        foreach($allUrls as $key => $val){
+            $counter++;
+            $constants .= " '$key' : '$val'";
+            ($counter !== $totUrls)?$constants .= ',':'';
+            $constants .= "\n";
+        }
+        $constants .= "}\n";
         $constants .= $this->jsConstants;
         
         return $constants;

@@ -44,7 +44,13 @@ TauRequest::init(TauURI::$url, (TauURI::$parameters)? TauURI::$parameters : arra
 TauMessages::addMessage("total url parts: ". TauURI::$urlPartsCount, 'notice', 'index');
 TauMessages::addNotice("total url parameters: ". TauURI::$parametersCount, 'index');
 
-LanguageLoader::getInstance()->getTranslations('url', APPLICATION_BASE_URL, Tau::getInstance()->getLang());
+//$fake['lang'] = 'fr';
+//$fake['country'] = 'us';
+
+$tau = Tau::getInstance(); // use Tau::getInstance($fake) if you want to fake data
+$lang = Tau::getInstance()->getLang();
+
+LanguageLoader::getInstance()->getTranslations('url', APPLICATION_BASE_URL, $lang);
 
 //Here you have a chance to alter the controller output,
 //and represents the last output of the application ( unless debug logging )
@@ -53,13 +59,9 @@ $output = TauRouter::route($urlMap, $tauContext);
 //Sending headers and cookies here, to not break the execution order
 TauResponse::sendHeadersAndCookies();
 
+Tau::closeAllDbConnections();
 //Finally, echoing the page
 echo $output; 
-
-if(VERBOSE_MODE){
-    TauMessages::addNotice("MAX MEM: " . round(memory_get_peak_usage(true)/1024,0) . " KB ", "indexFrontController");
-    echo TauMessages::getAllMessagesHtml();
-}
 
 function tauAutoLoad($class){
     global $autoloadPaths;
@@ -67,6 +69,3 @@ function tauAutoLoad($class){
     require_once(__ROOT__ . '/tau/inc/framework/TauAutoload.php');
     $inc = new TauAutoload($class, $autoloadPaths);
 }
-?>
-
-
